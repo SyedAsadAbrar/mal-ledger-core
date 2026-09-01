@@ -142,3 +142,16 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | Source/child identity | `E10:INSTALLMENT:1..3` | Preserves the E10 relationship while each financial posting remains uniquely targetable. |
 | Posting representation | Three ordinary CREDIT ledger entries | Existing current and historical balance projections require no special path. |
 | E10 date metadata | Every child is booked Day 5 and value-dated Day 5 | Matches the authoritative E10 input. |
+
+## Final required daily output after interest capitalization
+
+| Day | ACC-001 ledger balance | ACC-002 ledger balance | Retained fee assessment |
+| ---: | ---: | ---: | --- |
+| 1 | AED 250.00 | BHD 0.000 | None |
+| 2 | AED 225.00 | BHD 0.000 | ACC-001 AED 25.00 |
+| 3 | AED 625.00 | BHD 0.000 | None |
+| 4 | AED 415.00 | BHD 0.000 | ACC-001 AED 25.00 |
+| 5 | AED 390.00 | BHD 10.000 | ACC-001 AED 25.00 |
+| 6 | AED 390.93 | BHD 10.008 | None |
+
+Day 6 includes the single AED 0.93 and BHD 0.008 capitalization credits. Earlier days do not because both credits have `valueDate` Day 6.
