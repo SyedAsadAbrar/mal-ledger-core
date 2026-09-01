@@ -171,3 +171,13 @@ Each record will include:
 - **Reasoning:** Auth-B is declined and never settled, so selecting broader production settlement semantics is unnecessary here.
 - **Replay/test consequences:** Do not add this behavior to the initial canonical replay.
 - **Status:** Outside supplied scenario / intentionally not implemented
+
+## A-17 — Duplicate authorization IDs
+
+- **Ambiguity:** Should a second authorization request reuse an authorization ID that already identifies an approved or declined historical decision?
+- **Why it matters:** Later lifecycle events must resolve one unambiguous authorization record by ID.
+- **Possible interpretations:** Allow duplicates; scope uniqueness per account; accept exact duplicates as idempotent no-ops; or reject reuse across the ledger.
+- **Chosen interpretation:** Authorization IDs are unique across the ledger. Once an ID has produced either an approved or declined decision, any later request using that ID is rejected without appending another authorization record.
+- **Reasoning:** One ledger-wide identity rule is the smallest model that makes future lifecycle references unambiguous. This is distinct from unresolved duplicate external event-ID ingestion in A-09.
+- **Replay/test consequences:** Focused tests reject reuse after a recorded decision. No generic event-ID deduplication is added.
+- **Status:** Decided
