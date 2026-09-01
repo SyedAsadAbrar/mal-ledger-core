@@ -87,3 +87,10 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | Detail | Implementation | Reasoning |
 | --- | --- | --- |
 | First causal record sequence | 1 | One ledger-owned counter orders immutable postings and operational records independently of booked day and `value_date`; records from one source event share `eventId`. |
+
+## Phase 7 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| Earliest causal knowledge cutoff | 0 | Stored records remain one-based; zero cleanly represents the state before any event and includes only opening balance. |
+| Omitted causal knowledge cutoff | Latest currently known sequence | Historical queries default to everything processed so far while an explicit cutoff preserves an earlier knowledge state. |

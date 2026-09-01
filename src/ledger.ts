@@ -330,6 +330,44 @@ export class Ledger {
     return balance;
   }
 
+  balanceAtValueDate(
+    accountId: string,
+    valueDate: number,
+    asOfSequence?: number,
+  ): Money {
+    requireDay(valueDate, "valueDate");
+
+    if (
+      asOfSequence !== undefined &&
+      (!Number.isSafeInteger(asOfSequence) || asOfSequence < 0)
+    ) {
+      throw new RangeError(
+        "asOfSequence must be a non-negative safe integer",
+      );
+    }
+
+    const account = this.requireAccount(accountId);
+    const sequenceCutoff = asOfSequence ?? this.nextSequence - 1;
+    let balance = account.openingBalance;
+
+    for (const entry of this.postingHistory) {
+      if (
+        entry.accountId !== accountId ||
+        entry.valueDate > valueDate ||
+        entry.sequence > sequenceCutoff
+      ) {
+        continue;
+      }
+
+      balance =
+        entry.type === "CREDIT"
+          ? balance.add(entry.amount)
+          : balance.subtract(entry.amount);
+    }
+
+    return balance;
+  }
+
   availableBalance(accountId: string): Money {
     let available = this.currentBalance(accountId);
 
