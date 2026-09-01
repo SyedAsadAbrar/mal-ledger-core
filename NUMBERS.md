@@ -86,4 +86,4 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 
 | Detail | Implementation | Reasoning |
 | --- | --- | --- |
-| First causal stream sequence | 1 | One ledger-owned counter orders financial postings and operational decisions independently of booked day and `value_date`. |
+| First causal record sequence | 1 | One ledger-owned counter orders immutable postings and operational records independently of booked day and `value_date`; records from one source event share `eventId`. |

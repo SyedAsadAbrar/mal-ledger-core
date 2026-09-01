@@ -50,3 +50,12 @@
 - Documented and implemented ledger-wide unique authorization IDs without adding generic external event-ID deduplication.
 - Added focused approval, decline, boundary, hold, currency, identity, immutability, historical-decision, and causal-order tests.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-01T23:47:35+04:00 — Phase 6 settlement lifecycle
+
+- Corrected authorization audit identity to preserve source event ID separately from authorization ID.
+- Added immutable accepted/rejected settlement records, derived `SETTLED` state, full terminal hold release, and normal DEBIT posting for accepted settlement amounts.
+- Added inspectable rejection reasons for unknown, declined, repeated, over-capture, invalid, cross-currency, and account-mismatch attempts.
+- Linked accepted settlement records to their generated posting sequence while preserving one causal record order.
+- Added 26 focused settlement lifecycle, audit identity, immutability, error, financial-posting, and sequence tests.
+- Ran TypeScript checking and the complete test suite successfully.
