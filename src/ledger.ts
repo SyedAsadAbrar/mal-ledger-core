@@ -77,6 +77,23 @@ export interface OverdraftFeeAssessment {
   readonly ledgerEntrySequence: number;
 }
 
+export interface ReversalInput {
+  readonly eventId: string;
+  readonly targetEventId: string;
+  readonly accountId: string;
+  readonly bookedDay: number;
+  readonly valueDate: number;
+}
+
+export interface ReversalRecord extends ReversalInput {
+  readonly targetLedgerEntrySequence: number;
+  readonly amount: Money;
+  readonly originalPostingType: PostingType;
+  readonly reversalPostingType: PostingType;
+  readonly sequence: number;
+  readonly ledgerEntrySequence: number;
+}
+
 function immutableMoney(money: Money): Money {
   const snapshot = Money.fromMinorUnits(money.currency, money.minorUnits);
   Object.freeze(snapshot);
@@ -102,6 +119,7 @@ export class Ledger {
   private readonly authorizationById = new Map<string, AuthorizationRecord>();
   private readonly settlementHistory: SettlementRecord[] = [];
   private readonly overdraftFeeHistory: OverdraftFeeAssessment[] = [];
+  private readonly reversalHistory: ReversalRecord[] = [];
   private nextSequence = 1;
 
   constructor(accounts: readonly AccountDefinition[] = []) {
@@ -309,6 +327,82 @@ export class Ledger {
     return appended;
   }
 
+  reverse(input: ReversalInput): ReversalRecord {
+    requireNonEmpty(input.eventId, "event id");
+    requireNonEmpty(input.targetEventId, "target event id");
+    requireDay(input.bookedDay, "bookedDay");
+    requireDay(input.valueDate, "valueDate");
+    this.requireAccount(input.accountId);
+
+    const matchingTargets = this.postingHistory.filter(
+      (entry) => entry.eventId === input.targetEventId,
+    );
+
+    if (matchingTargets.length === 0) {
+      throw new Error(`Unknown reversal target: ${input.targetEventId}`);
+    }
+
+    if (matchingTargets.length > 1) {
+      throw new Error(`Ambiguous reversal target: ${input.targetEventId}`);
+    }
+
+    const target = matchingTargets[0];
+
+    if (target === undefined) {
+      throw new Error(`Unknown reversal target: ${input.targetEventId}`);
+    }
+
+    if (target.accountId !== input.accountId) {
+      throw new Error(
+        `Reversal account must match target account: ${input.accountId}`,
+      );
+    }
+
+    const alreadyReversed = this.reversalHistory.some(
+      (reversal) =>
+        reversal.targetLedgerEntrySequence === target.sequence,
+    );
+
+    if (alreadyReversed) {
+      throw new Error(
+        `Financial posting already reversed: ${input.targetEventId}`,
+      );
+    }
+
+    const reversalPostingType: PostingType =
+      target.type === "DEBIT" ? "CREDIT" : "DEBIT";
+    const reversal: ReversalRecord = Object.freeze({
+      eventId: input.eventId,
+      targetEventId: input.targetEventId,
+      targetLedgerEntrySequence: target.sequence,
+      accountId: input.accountId,
+      amount: immutableMoney(target.amount),
+      originalPostingType: target.type,
+      reversalPostingType,
+      bookedDay: input.bookedDay,
+      valueDate: input.valueDate,
+      sequence: this.nextSequence,
+      ledgerEntrySequence: this.nextSequence + 1,
+    });
+
+    this.reversalHistory.push(reversal);
+    this.nextSequence += 1;
+
+    const entry = this.append(reversalPostingType, {
+      eventId: input.eventId,
+      accountId: input.accountId,
+      amount: target.amount,
+      bookedDay: input.bookedDay,
+      valueDate: input.valueDate,
+    });
+
+    if (entry.sequence !== reversal.ledgerEntrySequence) {
+      throw new Error("Reversal posting sequence invariant failed");
+    }
+
+    return reversal;
+  }
+
   get entries(): readonly LedgerEntry[] {
     return this.postingHistory.slice();
   }
@@ -323,6 +417,10 @@ export class Ledger {
 
   get overdraftFees(): readonly OverdraftFeeAssessment[] {
     return this.overdraftFeeHistory.slice();
+  }
+
+  get reversals(): readonly ReversalRecord[] {
+    return this.reversalHistory.slice();
   }
 
   authorizationState(

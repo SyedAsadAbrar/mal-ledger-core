@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 8 — Overdraft fee assessment
+**Completed through:** Phase 9 — Reversal behavior
 
-**Next phase:** Phase 9 — Reversal behavior (`not started`)
+**Next phase:** Phase 10 — Interest accrual and capitalization (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -16,7 +16,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 6 | Settlement validation/lifecycle | Complete |
 | 7 | Value-dated entries | Complete |
 | 8 | Overdraft fee assessment | Complete |
-| 9 | Reversal behavior | Not started |
+| 9 | Reversal behavior | Complete |
 | 10 | Interest accrual and capitalization | Not started |
 | 11 | BHD instalment allocation | Not started |
 | 12 | Full E1–E10 replay | Not started |
@@ -210,6 +210,19 @@ Phase 8 is complete. `Ledger.assessOverdraftFees(accountId, throughDay)` perform
 - non-negative BHD days create no fee, while a negative non-AED closing fails explicitly because no conversion rule exists.
 
 The canonical E7 assessment generates Day 2, Day 4, and Day 5 fees totalling AED 75.00 and produces Day 1–Day 5 closes of AED 250.00, -395.00, 5.00, -205.00, and -230.00. No reversal, fee refund/correction, interest, capitalization, instalment allocation, or full replay behavior was implemented.
+
+### Phase 9 — Reversal behavior
+
+Phase 9 is complete. `Ledger.reverse(input)` provides append-only full financial reversal:
+
+- the target is resolved by exact `targetEventId` across financial posting history; zero matches, multiple matches, account mismatch, and an already-reversed target fail before any append;
+- reversal amount and direction are derived from the unique target posting, so callers cannot supply arbitrary compensation;
+- a successful immutable reversal record preserves source and target identities, target posting sequence, amount, original/opposite types, date metadata, causal sequence, and the linked adjacent posting sequence;
+- the compensating posting uses the reversal source event ID and ordinary CREDIT/DEBIT history, so current and value-dated balances require no reversal-specific calculation;
+- each target financial posting sequence may be reversed once, while generic external event-ID deduplication remains deliberately unimplemented;
+- reversal history is exposed through a defensive copy and neither the target posting nor any existing fee record is mutated or removed.
+
+Canonical E9 retains E7 and all three AED 25.00 fees, appends one AED 620.00 CREDIT with booked Day 6 and `valueDate` Day 2, and leaves Auth-A settled and Auth-B declined. The post-E9 pre-interest Day 1–Day 6 closes are AED 250.00, 225.00, 625.00, 415.00, 390.00, and 390.00. No fee refund, interest, capitalization, instalment allocation, final replay, or output behavior was implemented.
 
 ## Assessment tensions
 
