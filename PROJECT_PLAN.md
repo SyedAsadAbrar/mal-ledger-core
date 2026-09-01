@@ -2,15 +2,15 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 2 — Establish expected ledger semantics and expected numbers
+**Completed through:** Phase 3 — Money/currency representation
 
-**Next phase:** Phase 3 — Money/currency representation (`not started`)
+**Next phase:** Phase 4 — Basic credit/debit ledger postings (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
 | 1 | Project scaffold | Complete |
 | 2 | Establish expected ledger semantics and expected numbers | Complete |
-| 3 | Money/currency representation | Not started |
+| 3 | Money/currency representation | Complete |
 | 4 | Basic credit/debit ledger postings | Not started |
 | 5 | Authorization and available-balance handling | Not started |
 | 6 | Settlement validation/lifecycle | Not started |
@@ -131,6 +131,19 @@ These are final historical closings after the complete stream and retained fee e
 | Day 6 | AED 390.00 | BHD 10.000 | None |
 
 Authorization outcomes are Auth-A `APPROVED` at E3 then `SETTLED` at E5, and Auth-B `DECLINED` at E8 with no hold created. The only replay error is E6's unknown Auth-Z settlement. End-of-Day-6 capitalization credits AED 0.93 and BHD 0.008, producing final balances AED 390.93 and BHD 10.008.
+
+### Phase 3 — Money/currency representation
+
+Phase 3 is complete. `src/money.ts` provides the bounded assessment money model:
+
+- AED and BHD precision are defined once and minor-unit scales are derived from them;
+- stored amounts use safe-integer `number` minor units with validation at construction and after operations;
+- decimal strings are parsed exactly with digit and `bigint` arithmetic, accepting fewer fractional digits by right-padding and rejecting excess precision;
+- formatting always emits the currency's fixed precision, including negative amounts;
+- add, subtract, compare, and negate reject cross-currency use where applicable;
+- `roundFraction` uses exact integer arithmetic and round-half-up for later rational-rate calculations.
+
+No account, ledger, event, fee, authorization, settlement, reversal, interest lifecycle, or replay behavior was implemented.
 
 ## Assessment tensions
 
