@@ -127,10 +127,10 @@ Each record will include:
 - **Ambiguity:** The fee is denominated as AED 25.00 but the rule says “per account,” including a BHD account.
 - **Why it matters:** An AED amount cannot be posted directly into a BHD ledger without an exchange-rate or separate currency balance.
 - **Possible interpretations:** Fee applies only to AED accounts; use BHD 25.000; convert using a supplied rate; or post to a separate AED balance.
-- **Chosen interpretation:** No BHD overdraft fee behavior is implemented because ACC-002 never becomes negative.
-- **Reasoning:** Applying AED 25.00 to a BHD ledger would require an unstated exchange rate, equivalent amount, or multi-currency balance.
-- **Replay/test consequences:** The canonical replay is unaffected; negative BHD accounts are not a supported scenario.
-- **Status:** Candidate known production limitation
+- **Chosen interpretation:** Non-negative BHD closings create no fee. If assessment encounters a negative non-AED closing, fail explicitly with an unsupported-fee-currency error and append no fee record or posting.
+- **Reasoning:** Applying AED 25.00 to a BHD ledger would require an unstated exchange rate, equivalent amount, or multi-currency balance. Explicit failure makes that unsupported boundary visible without changing the canonical positive-BHD replay.
+- **Replay/test consequences:** ACC-002 remains unaffected in E1–E10. Focused tests accept positive BHD days and reject a negative BHD fee requirement without conversion or mutation.
+- **Status:** Decided
 
 ## A-13 — Day 6 interest and capitalization order
 
@@ -200,4 +200,14 @@ Each record will include:
 - **Chosen interpretation:** An authorization settles at most once. Every later settlement attempt is rejected and retained for inspection without another debit.
 - **Reasoning:** Phase 2 defines E5 as terminal rather than partial, and generic event-idempotency semantics remain unresolved in A-09.
 - **Replay/test consequences:** The first valid attempt derives `SETTLED`; later attempts leave that state and the financial history unchanged.
+- **Status:** Decided
+
+## A-20 — Generated fee identity and day metadata
+
+- **Ambiguity:** A derived fee needs a posting `eventId`, booked day, and `valueDate`, even though it is discovered later and is not one of the external E1–E10 source events.
+- **Why it matters:** Reusing the triggering source event ID would conflate identities, while using the discovery day as booked or value date would obscure which historical day was assessed.
+- **Possible interpretations:** Reuse the triggering source event ID; use only an opaque sequence; or assign a deterministic internal identity. Date metadata could use either the later discovery day or the historical assessed day.
+- **Chosen interpretation:** Use internal identity `FEE:<accountId>:D<assessedDay>` for both the fee record and linked debit posting. Set the generated posting's booked day and `valueDate` to the assessed day; retain the later discovery point through its global causal sequence.
+- **Reasoning:** The convention is deterministic, visibly distinct from external event IDs, and aligns booked/value metadata with the rule's account/day uniqueness while preserving actual append order through sequence.
+- **Replay/test consequences:** Canonical generated identities are `FEE:ACC-001:D2`, `FEE:ACC-001:D4`, and `FEE:ACC-001:D5`; each fee record immediately precedes and links to its normal debit posting.
 - **Status:** Decided

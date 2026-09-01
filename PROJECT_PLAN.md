@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 7 — Value-dated entries
+**Completed through:** Phase 8 — Overdraft fee assessment
 
-**Next phase:** Phase 8 — Overdraft fee assessment (`not started`)
+**Next phase:** Phase 9 — Reversal behavior (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -15,7 +15,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 5 | Authorization and available-balance handling | Complete |
 | 6 | Settlement validation/lifecycle | Complete |
 | 7 | Value-dated entries | Complete |
-| 8 | Overdraft fee assessment | Not started |
+| 8 | Overdraft fee assessment | Complete |
 | 9 | Reversal behavior | Not started |
 | 10 | Interest accrual and capitalization | Not started |
 | 11 | BHD instalment allocation | Not started |
@@ -197,6 +197,19 @@ Phase 7 is complete. `Ledger.balanceAtValueDate(accountId, valueDate, asOfSequen
 - later backdated postings can restate historical balances but do not rewrite recorded authorization decisions or lifecycle state.
 
 The canonical pre-E7 Day 1–Day 5 closes and post-E7 pre-fee closes are covered by focused tests, including Day 2 viewed immediately before and at E7's causal sequence. No fee generation, reversal, interest, capitalization, instalment allocation, or full replay behavior was implemented.
+
+### Phase 8 — Overdraft fee assessment
+
+Phase 8 is complete. `Ledger.assessOverdraftFees(accountId, throughDay)` performs the minimal append-only fee lifecycle:
+
+- days are inspected from Day 1 through `throughDay` in chronological order using the latest value-dated projection on every iteration;
+- each negative AED closing with no existing `(accountId, assessedDay)` fee immediately appends an immutable AED 25.00 assessment followed by a linked normal DEBIT posting;
+- each newly appended fee posting participates in the next day's balance, enabling chronological cascading without a frozen causal cutoff;
+- generated identity `FEE:<accountId>:D<assessedDay>` is distinct from external source IDs, while booked day and `valueDate` both equal the assessed day and global sequence records later discovery;
+- fee history is exposed through a defensive copy and is never removed when later financial information restates a day to positive;
+- non-negative BHD days create no fee, while a negative non-AED closing fails explicitly because no conversion rule exists.
+
+The canonical E7 assessment generates Day 2, Day 4, and Day 5 fees totalling AED 75.00 and produces Day 1–Day 5 closes of AED 250.00, -395.00, 5.00, -205.00, and -230.00. No reversal, fee refund/correction, interest, capitalization, instalment allocation, or full replay behavior was implemented.
 
 ## Assessment tensions
 

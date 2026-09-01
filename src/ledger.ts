@@ -1,5 +1,8 @@
 import { type Currency, Money } from "./money.js";
 
+const OVERDRAFT_FEE_AMOUNT = Money.parse("AED", "25.00");
+Object.freeze(OVERDRAFT_FEE_AMOUNT);
+
 export interface AccountDefinition {
   readonly id: string;
   readonly currency: Currency;
@@ -65,6 +68,15 @@ export interface SettlementRecord extends SettlementInput {
   readonly ledgerEntrySequence: number | null;
 }
 
+export interface OverdraftFeeAssessment {
+  readonly feeId: string;
+  readonly accountId: string;
+  readonly assessedDay: number;
+  readonly amount: Money;
+  readonly sequence: number;
+  readonly ledgerEntrySequence: number;
+}
+
 function immutableMoney(money: Money): Money {
   const snapshot = Money.fromMinorUnits(money.currency, money.minorUnits);
   Object.freeze(snapshot);
@@ -89,6 +101,7 @@ export class Ledger {
   private readonly authorizationHistory: AuthorizationRecord[] = [];
   private readonly authorizationById = new Map<string, AuthorizationRecord>();
   private readonly settlementHistory: SettlementRecord[] = [];
+  private readonly overdraftFeeHistory: OverdraftFeeAssessment[] = [];
   private nextSequence = 1;
 
   constructor(accounts: readonly AccountDefinition[] = []) {
@@ -268,6 +281,34 @@ export class Ledger {
     return settlement;
   }
 
+  assessOverdraftFees(
+    accountId: string,
+    throughDay: number,
+  ): readonly OverdraftFeeAssessment[] {
+    requireDay(throughDay, "throughDay");
+    const account = this.requireAccount(accountId);
+    const appended: OverdraftFeeAssessment[] = [];
+
+    for (let day = 1; day <= throughDay; day += 1) {
+      const balance = this.balanceAtValueDate(accountId, day);
+      const alreadyAssessed = this.hasOverdraftFee(accountId, day);
+
+      if (balance.minorUnits >= 0 || alreadyAssessed) {
+        continue;
+      }
+
+      if (account.currency !== "AED") {
+        throw new Error(
+          `Overdraft fees are unsupported for currency ${account.currency}`,
+        );
+      }
+
+      appended.push(this.appendOverdraftFee(accountId, day));
+    }
+
+    return appended;
+  }
+
   get entries(): readonly LedgerEntry[] {
     return this.postingHistory.slice();
   }
@@ -278,6 +319,10 @@ export class Ledger {
 
   get settlements(): readonly SettlementRecord[] {
     return this.settlementHistory.slice();
+  }
+
+  get overdraftFees(): readonly OverdraftFeeAssessment[] {
+    return this.overdraftFeeHistory.slice();
   }
 
   authorizationState(
@@ -432,6 +477,51 @@ export class Ledger {
     this.settlementHistory.push(settlement);
     this.nextSequence += 1;
     return settlement;
+  }
+
+  private hasOverdraftFee(accountId: string, assessedDay: number): boolean {
+    return this.overdraftFeeHistory.some(
+      (fee) =>
+        fee.accountId === accountId && fee.assessedDay === assessedDay,
+    );
+  }
+
+  private appendOverdraftFee(
+    accountId: string,
+    assessedDay: number,
+  ): OverdraftFeeAssessment {
+    if (this.hasOverdraftFee(accountId, assessedDay)) {
+      throw new Error(
+        `Overdraft fee already exists: ${accountId} Day ${assessedDay}`,
+      );
+    }
+
+    const feeId = `FEE:${accountId}:D${assessedDay}`;
+    const fee: OverdraftFeeAssessment = Object.freeze({
+      feeId,
+      accountId,
+      assessedDay,
+      amount: immutableMoney(OVERDRAFT_FEE_AMOUNT),
+      sequence: this.nextSequence,
+      ledgerEntrySequence: this.nextSequence + 1,
+    });
+
+    this.overdraftFeeHistory.push(fee);
+    this.nextSequence += 1;
+
+    const entry = this.append("DEBIT", {
+      eventId: feeId,
+      accountId,
+      amount: OVERDRAFT_FEE_AMOUNT,
+      bookedDay: assessedDay,
+      valueDate: assessedDay,
+    });
+
+    if (entry.sequence !== fee.ledgerEntrySequence) {
+      throw new Error("Overdraft fee posting sequence invariant failed");
+    }
+
+    return fee;
   }
 
   private requireAccount(accountId: string): AccountDefinition {
