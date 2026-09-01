@@ -1,8 +1,8 @@
 # mal-ledger-core
 
-A deliberately small TypeScript project for an in-memory account ledger core.
+A deliberately small TypeScript project for an in-memory account-ledger assessment.
 
-This scaffold contains no ledger business logic. The project has no web or API layer, UI, database, persistence, or application framework.
+Phase 1, the runnable project scaffold, is complete. Ledger business logic has not been implemented. The project has no web or API layer, UI, database, persistence, or application framework.
 
 ## Requirements
 
@@ -17,14 +17,14 @@ npm run typecheck
 npm run replay
 ```
 
-`npm run replay` currently runs a harmless placeholder. The E1-E10 replay will be implemented in a later project phase.
+`npm run replay` currently runs a harmless scaffold placeholder. Event replay will be implemented in a later project phase.
 
 ## Layout
 
-- `src/` — future ledger source code and the current setup placeholders
-- `tests/` — tests, beginning with a scaffold verification test
+- `src/` — the current scaffold export and replay placeholder
+- `tests/` — the scaffold verification test
 - `PROJECT_PLAN.md` — living implementation sequence
-- `NUMBERS.md` — constants and expected-number decisions
-- `AMBIGUITIES.md` — unresolved and resolved semantic ambiguities
-- `REJECTED.md` — rejected criteria and abandoned approaches
+- `NUMBERS.md` — future constants and expected-number decisions
+- `AMBIGUITIES.md` — future semantic ambiguities and decisions
+- `REJECTED.md` — future rejected criteria and abandoned approaches
 - `WORKLOG.md` — factual record of work actually performed
