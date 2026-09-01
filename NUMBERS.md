@@ -115,3 +115,16 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | Reversal uniqueness | One successful reversal per target posting sequence | Prevents duplicate compensation while keeping source event-ID deduplication out of scope. |
 | Reversal causal records | Audit record followed by linked compensating posting | Preserves append-only global order and allows causal-cutoff reconstruction. |
 | Canonical E9 compensation | AED +620.00, booked Day 6, value Day 2 | Exactly offsets E7 principal while retained fees preserve their AED -75.00 effect. |
+
+## Phase 10 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| Interest assessment window | Day 1 through Day 6 | Matches the fixed assessment window without introducing a generic schedule model. |
+| Daily basis snapshot | One latest-known causal sequence captured before capitalization | Every day uses the same financial knowledge state and the Day 6 credit cannot enter its own basis. |
+| Daily accrual storage | Six immutable derived values with closing balance and rounded amount | Preserves explainable audit detail without creating daily financial postings. |
+| Capitalization total | Exact `Money.add` sum of individually rounded daily amounts | Enforces the assessment's exact-sum invariant without independent aggregate rounding. |
+| Generated interest identity | `INTEREST:<accountId>:D6` | Deterministic internal identity is distinct from external source event IDs. |
+| Capitalization date metadata | Booked day and `valueDate` both equal Day 6 | Represents the one end-of-window financial credit. |
+| Capitalization uniqueness | One successful capitalization per account for the Day 1–Day 6 window | Prevents duplicate credits without adding generic source event deduplication. |
+| Zero rounded total | Reject without a capitalization record or posting | Preserves the positive financial-posting invariant and avoids zero-value ledger events. |

@@ -83,3 +83,11 @@
 - Added 14 focused tests covering opposite posting derivation, E7 immutability, E9 links and balances, fee retention, authorization history, causal cutoffs, and invalid targets.
 - Resolved the unknown, ambiguous, and repeated reversal-target decisions and marked Phase 9 complete with Phase 10 not started.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-02T01:35:46+04:00 — Phase 10 interest capitalization
+
+- Added one-snapshot Day 1–Day 6 positive-balance interest derivation with exact rational round-half-up arithmetic.
+- Added immutable daily accrual and capitalization audit records linked to one normal end-of-Day-6 CREDIT posting.
+- Enforced exact summation of individually rounded accruals, per-account/window uniqueness, and explicit zero-total rejection.
+- Added 16 focused tests covering AED and BHD accruals, canonical values, holds, snapshot timing, posting identity, duplicates, and nested immutability.
+- Ran TypeScript checking and the complete test suite successfully.

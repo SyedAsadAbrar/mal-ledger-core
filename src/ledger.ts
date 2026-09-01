@@ -1,7 +1,12 @@
-import { type Currency, Money } from "./money.js";
+import { type Currency, Money, roundFraction } from "./money.js";
 
 const OVERDRAFT_FEE_AMOUNT = Money.parse("AED", "25.00");
 Object.freeze(OVERDRAFT_FEE_AMOUNT);
+
+const INTEREST_FROM_DAY = 1;
+const INTEREST_THROUGH_DAY = 6;
+const DAILY_INTEREST_NUMERATOR = 4;
+const DAILY_INTEREST_DENOMINATOR = 10_000;
 
 export interface AccountDefinition {
   readonly id: string;
@@ -94,6 +99,24 @@ export interface ReversalRecord extends ReversalInput {
   readonly ledgerEntrySequence: number;
 }
 
+export interface DailyInterestAccrual {
+  readonly day: number;
+  readonly closingBalance: Money;
+  readonly amount: Money;
+}
+
+export interface InterestCapitalization {
+  readonly capitalizationId: string;
+  readonly accountId: string;
+  readonly fromDay: number;
+  readonly throughDay: number;
+  readonly dailyAccruals: readonly DailyInterestAccrual[];
+  readonly totalAmount: Money;
+  readonly asOfSequence: number;
+  readonly sequence: number;
+  readonly ledgerEntrySequence: number;
+}
+
 function immutableMoney(money: Money): Money {
   const snapshot = Money.fromMinorUnits(money.currency, money.minorUnits);
   Object.freeze(snapshot);
@@ -120,6 +143,7 @@ export class Ledger {
   private readonly settlementHistory: SettlementRecord[] = [];
   private readonly overdraftFeeHistory: OverdraftFeeAssessment[] = [];
   private readonly reversalHistory: ReversalRecord[] = [];
+  private readonly interestCapitalizationHistory: InterestCapitalization[] = [];
   private nextSequence = 1;
 
   constructor(accounts: readonly AccountDefinition[] = []) {
@@ -403,6 +427,91 @@ export class Ledger {
     return reversal;
   }
 
+  capitalizeInterest(accountId: string): InterestCapitalization {
+    const account = this.requireAccount(accountId);
+    const alreadyCapitalized = this.interestCapitalizationHistory.some(
+      (capitalization) =>
+        capitalization.accountId === accountId &&
+        capitalization.fromDay === INTEREST_FROM_DAY &&
+        capitalization.throughDay === INTEREST_THROUGH_DAY,
+    );
+
+    if (alreadyCapitalized) {
+      throw new Error(
+        `Interest already capitalized: ${accountId} Days ${INTEREST_FROM_DAY}-${INTEREST_THROUGH_DAY}`,
+      );
+    }
+
+    const asOfSequence = this.nextSequence - 1;
+    const dailyAccruals: DailyInterestAccrual[] = [];
+    let totalAmount = Money.fromMinorUnits(account.currency, 0);
+
+    for (let day = INTEREST_FROM_DAY; day <= INTEREST_THROUGH_DAY; day += 1) {
+      const closingBalance = this.balanceAtValueDate(
+        accountId,
+        day,
+        asOfSequence,
+      );
+      const interestMinorUnits =
+        closingBalance.minorUnits > 0
+          ? roundFraction(
+              closingBalance.minorUnits,
+              DAILY_INTEREST_NUMERATOR,
+              DAILY_INTEREST_DENOMINATOR,
+            )
+          : 0;
+      const amount = Money.fromMinorUnits(
+        account.currency,
+        interestMinorUnits,
+      );
+      const accrual: DailyInterestAccrual = Object.freeze({
+        day,
+        closingBalance: immutableMoney(closingBalance),
+        amount: immutableMoney(amount),
+      });
+
+      dailyAccruals.push(accrual);
+      totalAmount = totalAmount.add(amount);
+    }
+
+    if (totalAmount.minorUnits === 0) {
+      throw new Error(
+        `No positive interest to capitalize: ${accountId} Days ${INTEREST_FROM_DAY}-${INTEREST_THROUGH_DAY}`,
+      );
+    }
+
+    const capitalizationId =
+      `INTEREST:${accountId}:D${INTEREST_THROUGH_DAY}`;
+    const capitalization: InterestCapitalization = Object.freeze({
+      capitalizationId,
+      accountId,
+      fromDay: INTEREST_FROM_DAY,
+      throughDay: INTEREST_THROUGH_DAY,
+      dailyAccruals: Object.freeze(dailyAccruals.slice()),
+      totalAmount: immutableMoney(totalAmount),
+      asOfSequence,
+      sequence: this.nextSequence,
+      ledgerEntrySequence: this.nextSequence + 1,
+    });
+
+    this.interestCapitalizationHistory.push(capitalization);
+    this.nextSequence += 1;
+
+    const entry = this.append("CREDIT", {
+      eventId: capitalizationId,
+      accountId,
+      amount: totalAmount,
+      bookedDay: INTEREST_THROUGH_DAY,
+      valueDate: INTEREST_THROUGH_DAY,
+    });
+
+    if (entry.sequence !== capitalization.ledgerEntrySequence) {
+      throw new Error("Interest capitalization posting sequence invariant failed");
+    }
+
+    return capitalization;
+  }
+
   get entries(): readonly LedgerEntry[] {
     return this.postingHistory.slice();
   }
@@ -421,6 +530,10 @@ export class Ledger {
 
   get reversals(): readonly ReversalRecord[] {
     return this.reversalHistory.slice();
+  }
+
+  get interestCapitalizations(): readonly InterestCapitalization[] {
+    return this.interestCapitalizationHistory.slice();
   }
 
   authorizationState(

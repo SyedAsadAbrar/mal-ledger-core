@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 9 — Reversal behavior
+**Completed through:** Phase 10 — Interest accrual and capitalization
 
-**Next phase:** Phase 10 — Interest accrual and capitalization (`not started`)
+**Next phase:** Phase 11 — BHD instalment allocation (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -17,7 +17,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 7 | Value-dated entries | Complete |
 | 8 | Overdraft fee assessment | Complete |
 | 9 | Reversal behavior | Complete |
-| 10 | Interest accrual and capitalization | Not started |
+| 10 | Interest accrual and capitalization | Complete |
 | 11 | BHD instalment allocation | Not started |
 | 12 | Full E1–E10 replay | Not started |
 | 13 | Required daily output | Not started |
@@ -223,6 +223,23 @@ Phase 9 is complete. `Ledger.reverse(input)` provides append-only full financial
 - reversal history is exposed through a defensive copy and neither the target posting nor any existing fee record is mutated or removed.
 
 Canonical E9 retains E7 and all three AED 25.00 fees, appends one AED 620.00 CREDIT with booked Day 6 and `valueDate` Day 2, and leaves Auth-A settled and Auth-B declined. The post-E9 pre-interest Day 1–Day 6 closes are AED 250.00, 225.00, 625.00, 415.00, 390.00, and 390.00. No fee refund, interest, capitalization, instalment allocation, final replay, or output behavior was implemented.
+
+### Phase 10 — Interest accrual and capitalization
+
+Phase 10 is complete. `Ledger.capitalizeInterest(accountId)` implements the fixed Day 1–Day 6 assessment window:
+
+- one causal sequence snapshot is captured before calculation and used for all six `balanceAtValueDate` bases;
+- only positive closing ledger balances earn interest, so active authorization holds do not reduce the basis;
+- each daily amount uses the existing exact `4 / 10,000` rational calculation and round-half-up policy;
+- daily accruals are immutable derived audit values and create no daily financial postings;
+- the capitalization total is constructed only by exact addition of the six individually rounded amounts;
+- one immutable capitalization record is followed by one linked normal CREDIT with deterministic identity `INTEREST:<accountId>:D6`, booked Day 6 and value Day 6;
+- the pre-credit snapshot prevents the capitalization from entering its own Day 6 basis;
+- a second capitalization for the same account/window is rejected, and an all-zero rounded total is rejected without history mutation or a zero-value posting.
+
+Canonical ACC-001 accruals are AED 0.10, 0.09, 0.25, 0.17, 0.16, and 0.16, producing one AED 0.93 credit and final AED 390.93. A direct BHD 10.000 value-dated Day 5 credit proves generic BHD accruals of BHD 0.004 on Days 5 and 6, one BHD 0.008 credit, and final BHD 10.008 without implementing E10 instalment allocation.
+
+No instalment allocation, E10 scenario processing, full replay, required output, or intentional known-failure test was implemented.
 
 ## Assessment tensions
 
