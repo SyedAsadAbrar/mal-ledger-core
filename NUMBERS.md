@@ -54,6 +54,9 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | ACC-002 daily rounded interest | BHD 0.000, 0.000, 0.000, 0.000, 0.004, 0.004 | Exact rational rate; no half-minor-unit tie. |
 | ACC-002 capitalization | BHD 0.008 | Sum of Day 5 and Day 6 accruals. |
 | Final ACC-002 balance | BHD 10.008 | `10.000 + 0.008`. |
+| E10 total in BHD minor units | 10,000 | `10.000 × 1,000`. |
+| E10 integer quotient | 3,333 minor units | `10,000 / 3` with integer division. |
+| E10 integer remainder | 1 minor unit | `10,000 % 3`. |
 
 ## Human-selected implementation policies
 
@@ -128,3 +131,14 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | Capitalization date metadata | Booked day and `valueDate` both equal Day 6 | Represents the one end-of-window financial credit. |
 | Capitalization uniqueness | One successful capitalization per account for the Day 1–Day 6 window | Prevents duplicate credits without adding generic source event deduplication. |
 | Zero rounded total | Reject without a capitalization record or posting | Preserves the positive financial-posting invariant and avoids zero-value ledger events. |
+
+## Phase 11 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| Allocation arithmetic | `bigint` quotient and remainder over minor units | Avoids floating-point allocation and requires no rounding policy. |
+| Residual placement | Entire remainder added to the final instalment | Implements the documented deterministic E10 policy. |
+| Canonical minor-unit allocation | `3,333 / 3,333 / 3,334` | Exact decomposition of 10,000 minor units into three positive postings. |
+| Source/child identity | `E10:INSTALLMENT:1..3` | Preserves the E10 relationship while each financial posting remains uniquely targetable. |
+| Posting representation | Three ordinary CREDIT ledger entries | Existing current and historical balance projections require no special path. |
+| E10 date metadata | Every child is booked Day 5 and value-dated Day 5 | Matches the authoritative E10 input. |

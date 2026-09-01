@@ -165,3 +165,51 @@ export function roundFraction(
 
   return safeNumber(sign * roundedMagnitude);
 }
+
+/**
+ * Splits a positive amount into positive instalments using exact minor units.
+ * Every instalment receives the integer quotient and the final one receives
+ * the entire remainder.
+ */
+export function allocateInstallments(
+  total: Money,
+  count: number,
+): readonly Money[] {
+  requireSafeInteger(count, "installment count");
+
+  if (count <= 0) {
+    throw new RangeError("installment count must be positive");
+  }
+
+  if (total.minorUnits <= 0) {
+    throw new RangeError("installment total must be positive");
+  }
+
+  if (count > total.minorUnits) {
+    throw new RangeError(
+      "installment count must not exceed total minor units",
+    );
+  }
+
+  const totalMinorUnits = BigInt(total.minorUnits);
+  const installmentCount = BigInt(count);
+  const baseMinorUnits = totalMinorUnits / installmentCount;
+  const residualMinorUnits = totalMinorUnits % installmentCount;
+  const installments: Money[] = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const minorUnits =
+      index === count - 1
+        ? baseMinorUnits + residualMinorUnits
+        : baseMinorUnits;
+    const installment = Money.fromMinorUnits(
+      total.currency,
+      safeNumber(minorUnits),
+    );
+
+    Object.freeze(installment);
+    installments.push(installment);
+  }
+
+  return Object.freeze(installments);
+}

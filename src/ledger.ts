@@ -1,4 +1,9 @@
-import { type Currency, Money, roundFraction } from "./money.js";
+import {
+  allocateInstallments,
+  type Currency,
+  Money,
+  roundFraction,
+} from "./money.js";
 
 const OVERDRAFT_FEE_AMOUNT = Money.parse("AED", "25.00");
 Object.freeze(OVERDRAFT_FEE_AMOUNT);
@@ -20,6 +25,15 @@ export interface PostingInput {
   readonly eventId: string;
   readonly accountId: string;
   readonly amount: Money;
+  readonly bookedDay: number;
+  readonly valueDate: number;
+}
+
+export interface CreditInstallmentsInput {
+  readonly eventId: string;
+  readonly accountId: string;
+  readonly totalAmount: Money;
+  readonly installmentCount: number;
   readonly bookedDay: number;
   readonly valueDate: number;
 }
@@ -180,6 +194,37 @@ export class Ledger {
 
   postDebit(input: PostingInput): LedgerEntry {
     return this.append("DEBIT", input);
+  }
+
+  postCreditInstallments(
+    input: CreditInstallmentsInput,
+  ): readonly LedgerEntry[] {
+    requireNonEmpty(input.eventId, "event id");
+    requireDay(input.bookedDay, "bookedDay");
+    requireDay(input.valueDate, "valueDate");
+
+    const account = this.requireAccount(input.accountId);
+
+    if (input.totalAmount.currency !== account.currency) {
+      throw new TypeError(
+        `Posting currency must match account currency: ${input.accountId}`,
+      );
+    }
+
+    const installments = allocateInstallments(
+      input.totalAmount,
+      input.installmentCount,
+    );
+
+    return installments.map((amount, index) =>
+      this.append("CREDIT", {
+        eventId: `${input.eventId}:INSTALLMENT:${index + 1}`,
+        accountId: input.accountId,
+        amount,
+        bookedDay: input.bookedDay,
+        valueDate: input.valueDate,
+      }),
+    );
   }
 
   authorize(input: AuthorizationInput): AuthorizationRecord {

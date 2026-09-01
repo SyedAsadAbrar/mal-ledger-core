@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 10 — Interest accrual and capitalization
+**Completed through:** Phase 11 — BHD instalment allocation
 
-**Next phase:** Phase 11 — BHD instalment allocation (`not started`)
+**Next phase:** Phase 12 — Full E1–E10 replay (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -18,7 +18,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 8 | Overdraft fee assessment | Complete |
 | 9 | Reversal behavior | Complete |
 | 10 | Interest accrual and capitalization | Complete |
-| 11 | BHD instalment allocation | Not started |
+| 11 | BHD instalment allocation | Complete |
 | 12 | Full E1–E10 replay | Not started |
 | 13 | Required daily output | Not started |
 | 14 | Complete test suite and intentional failing test | Not started |
@@ -240,6 +240,20 @@ Phase 10 is complete. `Ledger.capitalizeInterest(accountId)` implements the fixe
 Canonical ACC-001 accruals are AED 0.10, 0.09, 0.25, 0.17, 0.16, and 0.16, producing one AED 0.93 credit and final AED 390.93. A direct BHD 10.000 value-dated Day 5 credit proves generic BHD accruals of BHD 0.004 on Days 5 and 6, one BHD 0.008 credit, and final BHD 10.008 without implementing E10 instalment allocation.
 
 No instalment allocation, E10 scenario processing, full replay, required output, or intentional known-failure test was implemented.
+
+### Phase 11 — BHD instalment allocation
+
+Phase 11 is complete. `allocateInstallments(total, count)` and `Ledger.postCreditInstallments(input)` provide the exact behavior needed for E10:
+
+- allocation uses `bigint` division and remainder over integer minor units, with no floating-point calculation or rounding mode;
+- every instalment starts with the quotient, and the final instalment receives the complete residual;
+- positive totals and positive safe-integer counts are required, and the count cannot exceed the available minor units because normal ledger postings must remain positive;
+- E10's BHD 10.000 becomes BHD 3.333, 3.333, and 3.334, summing exactly to BHD 10.000;
+- the ledger method appends three ordinary CREDIT entries in causal order, all booked Day 5 and value-dated Day 5;
+- deterministic child identities `E10:INSTALLMENT:1`, `E10:INSTALLMENT:2`, and `E10:INSTALLMENT:3` preserve the source relationship without making reversal target identity ambiguous;
+- current balance and the existing value-date projection derive the result without a special balance path.
+
+The focused E10-like test setup ends at BHD 10.000 and does not execute interest capitalization. No full replay, daily output, intentional known-failure test, final README, or architecture document was implemented.
 
 ## Assessment tensions
 
