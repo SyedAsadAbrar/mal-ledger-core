@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 14 — Complete test suite and intentional failing test
+**Completed through:** Phase 15 — Documentation review
 
-**Next phase:** Phase 15 — Documentation review (`not started`)
+**Next phase:** Phase 16 — Final clean-run verification (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -22,14 +22,14 @@ This is a living implementation plan. Update statuses as work progresses without
 | 12 | Full E1–E10 replay | Complete |
 | 13 | Required daily output | Complete |
 | 14 | Complete test suite and intentional failing test | Complete |
-| 15 | Documentation review | Not started |
+| 15 | Documentation review | Complete |
 | 16 | Final clean-run verification | Not started |
 
 ## Phase notes
 
 ### Phase 2 — Design oracle
 
-Phase 2 is complete. Canonical ledger semantics are established, expected numbers have been manually derived, all acceptance criteria are classified, and ambiguity decisions are documented. Implementation has not started.
+Phase 2 is complete. Canonical ledger semantics were established, expected numbers were manually derived, all acceptance criteria were classified, and ambiguity decisions were documented before implementation began.
 
 Established directly from the assessment:
 
@@ -274,7 +274,13 @@ The final output closes Day 6 at AED 390.93 and BHD 10.008. No intentional faili
 
 Phase 14 is complete. `tests/known-limitation.expected-failure.ts` demonstrates A-09: delivering the same external source event twice currently creates two postings because generic ingestion idempotency is deliberately not implemented. The normal `npm test` suite excludes this specially named file and remains green. `npm run test:known-failure` executes it separately and is expected to report exactly one failing test, with AED 200.00 actual versus the production-desirable AED 100.00 expected.
 
-No ledger or domain behavior was changed. Phase 15 documentation review has not started.
+No ledger or domain behavior was changed in Phase 14.
+
+### Phase 15 — Documentation review
+
+Phase 15 is complete. The README now describes the finished submission, valid commands, canonical replay output, essential interpretations, rejected criteria, and the isolated expected failure. `NUMBERS.md`, `AMBIGUITIES.md`, `REJECTED.md`, `WORKLOG.md`, `AGENTS.md`, and this plan were audited against the implementation and corrected only where wording was stale or potentially misleading.
+
+The unused Phase 1 scaffold source and test were removed. A clean install, typecheck, 173-test normal suite, canonical replay, and the single expected A-09 failure were verified. No ledger calculation, domain behavior, or canonical result changed. Phase 16 has not started.
 
 ## Assessment tensions
 

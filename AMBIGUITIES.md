@@ -79,7 +79,7 @@ Each record will include:
 - **Possible interpretations:** Half-even, half-up, truncation, or a calculation-specific mode.
 - **Chosen interpretation:** Use exact integer/rational calculations and round half up to the account currency's precision.
 - **Reasoning:** It is deterministic and simple to defend; it is a human-selected policy, not a universal banking rule.
-- **Replay/test consequences:** Future tests need exact-half cases, although none of the supplied expected interest amounts lands on a half-minor-unit tie.
+- **Replay/test consequences:** Focused money tests cover exact-half cases, although none of the supplied expected interest amounts lands on a half-minor-unit tie.
 - **Status:** Decided
 
 ## A-08 — BHD 10.000 instalment remainder

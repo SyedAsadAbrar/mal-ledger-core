@@ -114,3 +114,11 @@
 - Added `npm run test:known-failure` while keeping the intentional test outside the normal green test glob.
 - Confirmed typechecking and all 174 normal tests pass, the dedicated command reports exactly one intentional failure, and the canonical replay remains unchanged.
 - Marked Phase 14 complete with Phase 15 not started and made no ledger or domain behavior changes.
+
+## 2026-09-02T02:04:39+04:00 — Phase 15 submission documentation review
+
+- Replaced the stale scaffold README with concise setup, replay-output, interpretation, rejected-criteria, known-limitation, and repository-layout guidance.
+- Audited the required documentation against the implementation and corrected stale wording about implementation timing, rounding tests, non-AED fee policy, and E9 fee retention.
+- Removed the unused `src/scaffold.ts` and `tests/scaffold.test.ts` artifacts without changing domain behavior.
+- Ran a clean dependency install, typechecking, all 173 normal tests, the canonical replay, and the dedicated one-test A-09 expected failure.
+- Marked Phase 15 complete with Phase 16 not started.

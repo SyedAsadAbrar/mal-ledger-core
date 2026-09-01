@@ -11,7 +11,7 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | ACC-002 opening balance | BHD 0.000 | Assessment | Explicit account opening state. |
 | AED precision | 2 decimal places | Assessment | Amounts are stored and rounded at currency precision. |
 | BHD precision | 3 decimal places | Assessment | Amounts are stored and rounded at currency precision. |
-| Overdraft fee | AED 25.00 per eligible account/day | Assessment | Explicit amount and once-per-day frequency; BHD applicability is unresolved. |
+| Overdraft fee | AED 25.00 per eligible account/day | Assessment | Explicit amount and once-per-day frequency; the selected negative non-AED policy is documented below. |
 | Daily positive-balance interest rate | 0.04% | Assessment | Applied to positive closing ledger balances. |
 | E1 | Booked/event Day 1; value Day 1; AED +1,200.00 | Assessment | ACC-001 credit. |
 | E2 | Booked/event Day 1; value Day 1; AED -950.00 | Assessment | ACC-001 debit. |
