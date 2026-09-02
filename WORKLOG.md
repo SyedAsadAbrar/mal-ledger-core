@@ -27,3 +27,10 @@
 - Applied the human-approved time, settlement, fee, reversal, allocation, rounding, and interest policies.
 - Reconciled the replay, acceptance classifications, ambiguity statuses, and expected numbers into one canonical design oracle.
 - Marked Phase 2 complete with Phase 3 not started and made no source or test changes.
+
+## 2026-09-01T23:17:13+04:00 — Phase 3 exact money representation
+
+- Added the AED/BHD safe-integer minor-unit money model with exact decimal parsing, fixed-precision formatting, basic same-currency operations, and rational round-half-up support.
+- Added focused tests for precision, scales, parsing, normalization, formatting, operations, currency mismatch, interest primitives, half ties, and invalid inputs.
+- Documented the concrete representation choices and marked Phase 3 complete with Phase 4 not started.
+- Ran TypeScript checking and the complete test suite successfully.

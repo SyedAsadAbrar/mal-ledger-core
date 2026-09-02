@@ -68,3 +68,16 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | E7 fee assessment | Recompute affected value dates chronologically and append Days 2, 4, and 5 fees at E7's stream point | Retrospective assessment timing is unspecified. |
 | E9 fee consequences | Compensate E7 only; retain all separately booked fees | Automatic derived-fee reversal is unspecified and no correction events exist. |
 | Interest timing | Derive after the full stream; accrue Day 6 before capitalization; capitalize the rounded-daily sum | Booked/event days are non-monotonic in stream sequence. |
+
+## Phase 3 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| Stored money amount | Safe-integer JavaScript `number` minor units | Assessment values are tiny and bounded; construction and operations reject non-integers and values outside `Number.isSafeInteger`. |
+| Supported currencies | `AED` and `BHD` only | Matches the assessment scope. |
+| Precision source | One currency-to-precision map | Minor-unit scale is derived as `10^precision`, avoiding scattered scale constants. |
+| Decimal parsing | Exact sign/digit parsing with `bigint` intermediate arithmetic | Never converts a financial decimal through floating point. |
+| Accepted decimal forms | Whole units or one through the currency's maximum fractional digits | `"25"` and `"25.0"` AED normalize to `"25.00"`; excess precision is rejected rather than truncated. |
+| Formatting | Sign plus integer quotient and zero-padded minor-unit remainder | Always emits exactly two AED or three BHD decimal places. |
+| Rational rounding | Exact `bigint` product/division/remainder, then round half up | Result is converted back only after confirming it is a safe integer minor-unit amount. |
+| Half-up negative tie | Away from zero | `-0.5` minor unit rounds to `-1`, mirroring positive half-up magnitude rounding. |
