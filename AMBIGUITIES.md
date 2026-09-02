@@ -211,3 +211,13 @@ Each record will include:
 - **Reasoning:** The convention is deterministic, visibly distinct from external event IDs, and aligns booked/value metadata with the rule's account/day uniqueness while preserving actual append order through sequence.
 - **Replay/test consequences:** Canonical generated identities are `FEE:ACC-001:D2`, `FEE:ACC-001:D4`, and `FEE:ACC-001:D5`; each fee record immediately precedes and links to its normal debit posting.
 - **Status:** Decided
+
+## A-21 — Zero-total interest capitalization
+
+- **Ambiguity:** What happens when every Day 1–Day 6 positive-balance interest accrual rounds to zero, so the capitalization total is zero?
+- **Why it matters:** Existing financial postings require a positive magnitude, while appending a zero-value credit would create an audit event with no financial effect.
+- **Possible interpretations:** Append a zero-value credit; retain a zero-total capitalization record without a linked posting; treat the operation as a no-op; or reject capitalization because there is no positive amount to book.
+- **Chosen interpretation:** Reject the capitalization attempt before appending either an interest record or a ledger posting when the exact sum of individually rounded daily accruals is zero.
+- **Reasoning:** This preserves the existing positive-posting invariant and keeps every successful capitalization record linked to exactly one meaningful credit. It adds no zero-value financial event or special unlinked audit shape.
+- **Replay/test consequences:** Zero and negative days still contribute zero within a window that has later positive accruals. An entirely zero-total window fails without changing interest or posting history; canonical AED and BHD windows are unaffected because both totals are positive.
+- **Status:** Decided
