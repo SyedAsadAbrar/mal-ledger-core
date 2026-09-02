@@ -122,3 +122,12 @@
 - Removed the unused `src/scaffold.ts` and `tests/scaffold.test.ts` artifacts without changing domain behavior.
 - Ran a clean dependency install, typechecking, all 173 normal tests, the canonical replay, and the dedicated one-test A-09 expected failure.
 - Marked Phase 15 complete with Phase 16 not started.
+
+## 2026-09-02T12:07:56+04:00 — Phase 16 final repository verification
+
+- Removed only ignored generated `dist/` output, then ran `npm ci` successfully from `package-lock.json` with three packages installed and zero reported vulnerabilities.
+- Ran typechecking, all 173 normal tests, and the canonical replay successfully; verified every Day 1–Day 6 section and retained the E7 Day-2 pre-fee AED -370.00 oracle.
+- Ran the dedicated known-failure command and observed exactly one intentional A-09 failure: AED 200.00 actual versus AED 100.00 expected.
+- Audited tracked files, `.gitignore`, local paths, secret-like patterns, stale text, repository scope, rejection classifications, README commands, and the intact commit history.
+- Queried GitHub read-only and confirmed the repository remains private with `chore/project-scaffold` as the default branch; no GitHub settings were changed.
+- Marked Phase 16 complete with no next implementation phase and made no domain or canonical behavior changes.
