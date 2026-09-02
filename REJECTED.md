@@ -15,7 +15,7 @@ E7 therefore causes three fee events—Days 2, 4, and 5—totalling AED 75.00. �
 
 ### Criterion 6 — E9 restores all balances and fees
 
-**Rejected.** E9 explicitly references E7, so it appends an AED 620.00 compensating posting and leaves E7 unchanged. The three fee events are separate booked ledger events, and the supplied stream contains no fee-correction events. Their AED -75.00 effect remains, leaving final pre-interest ACC-001 closings of AED 250.00, 225.00, 625.00, 415.00, 390.00, and 390.00 for Days 1–6.
+**Rejected.** Under the documented policy choice, E9 explicitly references E7, so it appends an AED 620.00 compensating posting and leaves E7 unchanged. The three fee events are separate booked ledger events, and the supplied stream contains no fee-correction events. Their AED -75.00 effect remains, leaving final pre-interest ACC-001 closings of AED 250.00, 225.00, 625.00, 415.00, 390.00, and 390.00 for Days 1–6.
 
 The primary reason is not merely append-only history: E9 reverses E7 itself, not the independently booked fees. Append-only semantics reinforce that those events cannot silently disappear; any reimbursement would require explicit compensating fee events.
 

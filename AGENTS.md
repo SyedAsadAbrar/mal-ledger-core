@@ -9,7 +9,7 @@ These instructions apply to all future work in this repository.
 5. Keep financial ledger and event history append-only.
 6. Never mutate or delete an existing financial event.
 7. Keep stream sequence, booked/event day, and `value_date` as separate concepts.
-8. Use integer minor units for financial amounts when money logic is implemented; do not use JavaScript floating-point arithmetic for ledger money.
+8. Keep financial amounts in integer minor units; do not use JavaScript floating-point arithmetic for ledger money.
 9. Prefer the smallest understandable implementation that satisfies the assessment and is easy to defend.
 10. Do not introduce a web layer, API, UI, database, persistence, Docker, queues, or distributed infrastructure unless the project scope explicitly changes.
 11. Add focused tests alongside implemented business rules.
