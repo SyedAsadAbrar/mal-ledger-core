@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 6 — Settlement validation/lifecycle
+**Completed through:** Phase 7 — Value-dated entries
 
-**Next phase:** Phase 7 — Value-dated entries (`not started`)
+**Next phase:** Phase 8 — Overdraft fee assessment (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -14,7 +14,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 4 | Basic credit/debit ledger postings | Complete |
 | 5 | Authorization and available-balance handling | Complete |
 | 6 | Settlement validation/lifecycle | Complete |
-| 7 | Value-dated entries | Not started |
+| 7 | Value-dated entries | Complete |
 | 8 | Overdraft fee assessment | Not started |
 | 9 | Reversal behavior | Not started |
 | 10 | Interest accrual and capitalization | Not started |
@@ -184,6 +184,19 @@ Phase 6 is complete. Authorization and settlement lifecycle history is append-on
 - one source settlement event is represented by adjacent causal records sharing `eventId`, with the settlement explicitly linking to its generated posting sequence.
 
 No historical balance projection, fee, reversal, interest, capitalization, instalment allocation, authorization expiry/cancellation, or full replay behavior was implemented.
+
+### Phase 7 — Value-dated entries
+
+Phase 7 is complete. `Ledger.balanceAtValueDate(accountId, valueDate, asOfSequence?)` provides a read-only historical projection:
+
+- the projection starts with the account opening balance and scans immutable posting history without sorting it;
+- a posting contributes only when its `valueDate` is on or before the requested day and its causal `sequence` is on or before the cutoff;
+- omitting the cutoff uses every record currently known, while cutoff `0` represents knowledge before the first one-based record and therefore returns opening balance only;
+- booked day remains audit metadata and does not determine historical economic inclusion;
+- `currentBalance` remains the processed-state projection over every known financial posting, independent of value date;
+- later backdated postings can restate historical balances but do not rewrite recorded authorization decisions or lifecycle state.
+
+The canonical pre-E7 Day 1–Day 5 closes and post-E7 pre-fee closes are covered by focused tests, including Day 2 viewed immediately before and at E7's causal sequence. No fee generation, reversal, interest, capitalization, instalment allocation, or full replay behavior was implemented.
 
 ## Assessment tensions
 

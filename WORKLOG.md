@@ -59,3 +59,11 @@
 - Linked accepted settlement records to their generated posting sequence while preserving one causal record order.
 - Added 26 focused settlement lifecycle, audit identity, immutability, error, financial-posting, and sequence tests.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-01T23:59:40+04:00 — Phase 7 value-dated balance projections
+
+- Added a read-only historical balance projection filtered by both `value_date` and optional causal sequence cutoff.
+- Preserved the existing current-balance calculation, immutable append order, and recorded authorization outcomes.
+- Added 21 focused tests covering canonical pre-E7 and post-E7 balances, historical knowledge cutoffs, date semantics, validation, and immutability.
+- Documented cutoff zero as opening-balance-only and marked Phase 7 complete with Phase 8 not started.
+- Ran TypeScript checking and the complete test suite successfully.
