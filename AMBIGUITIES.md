@@ -99,7 +99,7 @@ Each record will include:
 - **Possible interpretations:** Reject every duplicate; no-op exact duplicates but reject conflicts; or append duplicates as separate arrivals.
 - **Chosen interpretation:** None for Phase 2; duplicate handling is deliberately outside the supplied replay.
 - **Reasoning:** No duplicate occurs in E1–E10, and selecting production idempotency semantics is not required to implement the canonical scenario.
-- **Replay/test consequences:** Do not add duplicate behavior or tests in the initial replay implementation.
+- **Replay/test consequences:** The canonical replay remains unaffected. `tests/known-limitation.expected-failure.ts`, run separately with `npm run test:known-failure`, demonstrates that duplicate delivery currently applies the posting twice; it is intentionally excluded from the normal green suite.
 - **Status:** Outside supplied scenario / intentionally not implemented
 
 ## A-10 — Unknown or ambiguous reversal target

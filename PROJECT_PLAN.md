@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 13 — Required daily output
+**Completed through:** Phase 14 — Complete test suite and intentional failing test
 
-**Next phase:** Phase 14 — Complete test suite and intentional failing test (`not started`)
+**Next phase:** Phase 15 — Documentation review (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -21,7 +21,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 11 | BHD instalment allocation | Complete |
 | 12 | Full E1–E10 replay | Complete |
 | 13 | Required daily output | Complete |
-| 14 | Complete test suite and intentional failing test | Not started |
+| 14 | Complete test suite and intentional failing test | Complete |
 | 15 | Documentation review | Not started |
 | 16 | Final clean-run verification | Not started |
 
@@ -269,6 +269,12 @@ Phases 12 and 13 are complete. `runAssessmentScenario()` and `formatReplayReport
 - `npm run replay` now builds and executes the real scenario through a thin `src/replay.ts` wrapper.
 
 The final output closes Day 6 at AED 390.93 and BHD 10.008. No intentional failing test, final documentation cleanup, README rewrite, or architecture document was implemented.
+
+### Phase 14 — Intentional known-failure test
+
+Phase 14 is complete. `tests/known-limitation.expected-failure.ts` demonstrates A-09: delivering the same external source event twice currently creates two postings because generic ingestion idempotency is deliberately not implemented. The normal `npm test` suite excludes this specially named file and remains green. `npm run test:known-failure` executes it separately and is expected to report exactly one failing test, with AED 200.00 actual versus the production-desirable AED 100.00 expected.
+
+No ledger or domain behavior was changed. Phase 15 documentation review has not started.
 
 ## Assessment tensions
 

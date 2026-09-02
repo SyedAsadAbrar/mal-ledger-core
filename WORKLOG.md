@@ -107,3 +107,10 @@
 - Replaced the replay placeholder with deterministic Day 1–Day 6 output for balances, fees, authorization states, and errors plus an interest summary.
 - Added 10 end-to-end tests covering source order, E6, fee retention, authorization history, E7/E9 states, E10, interest, final balances, generated postings, and formatting.
 - Marked Phases 12 and 13 complete with Phase 14 not started, and ran typechecking, the complete test suite, and the executable replay successfully.
+
+## 2026-09-02T01:57:25+04:00 — Phase 14 intentional known limitation
+
+- Added one isolated expected-failure test documenting A-09 duplicate external event delivery and the current AED 200.00 result after two AED 100.00 postings.
+- Added `npm run test:known-failure` while keeping the intentional test outside the normal green test glob.
+- Confirmed typechecking and all 174 normal tests pass, the dedicated command reports exactly one intentional failure, and the canonical replay remains unchanged.
+- Marked Phase 14 complete with Phase 15 not started and made no ledger or domain behavior changes.
