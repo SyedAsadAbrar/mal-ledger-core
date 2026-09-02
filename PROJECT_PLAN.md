@@ -2,9 +2,11 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 15 — Documentation review
+**Completed through:** Phase 16 — Final clean-run verification
 
-**Next phase:** Phase 16 — Final clean-run verification (`not started`)
+**Implementation phases:** Complete
+
+**Handoff:** Deliverable 1 implementation verified; public repository handoff pending.
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -23,7 +25,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 13 | Required daily output | Complete |
 | 14 | Complete test suite and intentional failing test | Complete |
 | 15 | Documentation review | Complete |
-| 16 | Final clean-run verification | Not started |
+| 16 | Final clean-run verification | Complete |
 
 ## Phase notes
 
@@ -280,7 +282,15 @@ No ledger or domain behavior was changed in Phase 14.
 
 Phase 15 is complete. The README now describes the finished submission, valid commands, canonical replay output, essential interpretations, rejected criteria, and the isolated expected failure. `NUMBERS.md`, `AMBIGUITIES.md`, `REJECTED.md`, `WORKLOG.md`, `AGENTS.md`, and this plan were audited against the implementation and corrected only where wording was stale or potentially misleading.
 
-The unused Phase 1 scaffold source and test were removed. A clean install, typecheck, 173-test normal suite, canonical replay, and the single expected A-09 failure were verified. No ledger calculation, domain behavior, or canonical result changed. Phase 16 has not started.
+The unused Phase 1 scaffold source and test were removed. A clean install, typecheck, 173-test normal suite, canonical replay, and the single expected A-09 failure were verified. No ledger calculation, domain behavior, or canonical result changed. At the close of Phase 15, Phase 16 had not yet started.
+
+### Phase 16 — Final clean-run verification
+
+Phase 16 is complete. From a clean generated-output state, `npm ci` succeeded from the lockfile, typechecking passed, all 173 normal tests passed, and the canonical replay matched every required Day 1–Day 6 balance, fee, authorization, error, and interest result. The dedicated A-09 command returned non-zero with exactly one intentional duplicate-event failure: AED 200.00 actual versus AED 100.00 expected.
+
+Tracked-file, local-path, secret-pattern, stale-text, repository-scope, README-command, rejection-oracle, and commit-history audits passed. The meaningful phase history remains intact, preceded by the genuine initial scaffold commit `6e78690`. No domain or canonical behavior changed.
+
+GitHub was queried read-only during verification and reported the repository as private with `chore/project-scaffold` as its default branch. Making the repository public, selecting the final default branch, and completing the remaining Deliverable 1 handoff artifacts are pending outside this phase. There is no next implementation phase.
 
 ## Assessment tensions
 
