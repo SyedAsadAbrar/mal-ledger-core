@@ -42,3 +42,11 @@
 - Derived current per-account balances from opening balances and immutable posting history.
 - Added focused account, posting, balance, currency, ordering, immutability, magnitude, and account-isolation tests.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-01T23:37:07+04:00 — Phase 5 authorization holds
+
+- Added immutable approved/declined authorization decisions and derived active holds and available balances.
+- Generalized the Phase 4 sequence counter so financial postings and authorization decisions share one causal order.
+- Documented and implemented ledger-wide unique authorization IDs without adding generic external event-ID deduplication.
+- Added focused approval, decline, boundary, hold, currency, identity, immutability, historical-decision, and causal-order tests.
+- Ran TypeScript checking and the complete test suite successfully.

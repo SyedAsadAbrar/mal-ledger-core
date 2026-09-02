@@ -21,6 +21,21 @@ export interface LedgerEntry extends PostingInput {
   readonly sequence: number;
 }
 
+export type AuthorizationStatus = "APPROVED" | "DECLINED";
+
+export interface AuthorizationInput {
+  readonly authorizationId: string;
+  readonly accountId: string;
+  readonly holdAmount: Money;
+  readonly bookedDay: number;
+  readonly valueDate: number;
+}
+
+export interface AuthorizationRecord extends AuthorizationInput {
+  readonly status: AuthorizationStatus;
+  readonly sequence: number;
+}
+
 function immutableMoney(money: Money): Money {
   const snapshot = Money.fromMinorUnits(money.currency, money.minorUnits);
   Object.freeze(snapshot);
@@ -42,6 +57,9 @@ function requireDay(value: number, name: string): void {
 export class Ledger {
   private readonly accounts = new Map<string, AccountDefinition>();
   private readonly postingHistory: LedgerEntry[] = [];
+  private readonly authorizationHistory: AuthorizationRecord[] = [];
+  private readonly authorizationIds = new Set<string>();
+  private nextSequence = 1;
 
   constructor(accounts: readonly AccountDefinition[] = []) {
     for (const account of accounts) {
@@ -79,8 +97,65 @@ export class Ledger {
     return this.append("DEBIT", input);
   }
 
+  authorize(input: AuthorizationInput): AuthorizationRecord {
+    requireNonEmpty(input.authorizationId, "authorization id");
+    requireDay(input.bookedDay, "bookedDay");
+    requireDay(input.valueDate, "valueDate");
+
+    const account = this.requireAccount(input.accountId);
+
+    if (this.authorizationIds.has(input.authorizationId)) {
+      throw new Error(
+        `Authorization already exists: ${input.authorizationId}`,
+      );
+    }
+
+    if (input.holdAmount.currency !== account.currency) {
+      throw new TypeError(
+        `Hold currency must match account currency: ${input.accountId}`,
+      );
+    }
+
+    if (input.holdAmount.minorUnits <= 0) {
+      throw new RangeError("Hold amount must be a positive magnitude");
+    }
+
+    const availableAfterHold = this.availableBalance(input.accountId).subtract(
+      input.holdAmount,
+    );
+    const status: AuthorizationStatus =
+      availableAfterHold.minorUnits >= 0 ? "APPROVED" : "DECLINED";
+    const authorization: AuthorizationRecord = Object.freeze({
+      authorizationId: input.authorizationId,
+      accountId: input.accountId,
+      holdAmount: immutableMoney(input.holdAmount),
+      bookedDay: input.bookedDay,
+      valueDate: input.valueDate,
+      status,
+      sequence: this.nextSequence,
+    });
+
+    this.authorizationHistory.push(authorization);
+    this.authorizationIds.add(authorization.authorizationId);
+    this.nextSequence += 1;
+    return authorization;
+  }
+
   get entries(): readonly LedgerEntry[] {
     return this.postingHistory.slice();
+  }
+
+  get authorizations(): readonly AuthorizationRecord[] {
+    return this.authorizationHistory.slice();
+  }
+
+  activeHolds(accountId: string): readonly AuthorizationRecord[] {
+    this.requireAccount(accountId);
+    return this.authorizationHistory.filter(
+      (authorization) =>
+        authorization.accountId === accountId &&
+        authorization.status === "APPROVED",
+    );
   }
 
   currentBalance(accountId: string): Money {
@@ -99,6 +174,16 @@ export class Ledger {
     }
 
     return balance;
+  }
+
+  availableBalance(accountId: string): Money {
+    let available = this.currentBalance(accountId);
+
+    for (const authorization of this.activeHolds(accountId)) {
+      available = available.subtract(authorization.holdAmount);
+    }
+
+    return available;
   }
 
   private append(type: PostingType, input: PostingInput): LedgerEntry {
@@ -125,10 +210,11 @@ export class Ledger {
       amount: immutableMoney(input.amount),
       bookedDay: input.bookedDay,
       valueDate: input.valueDate,
-      sequence: this.postingHistory.length + 1,
+      sequence: this.nextSequence,
     });
 
     this.postingHistory.push(entry);
+    this.nextSequence += 1;
     return entry;
   }
 

@@ -86,4 +86,4 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 
 | Detail | Implementation | Reasoning |
 | --- | --- | --- |
-| First ledger-entry sequence | 1 | Sequence is a human-readable, monotonically increasing append position and is independent of booked day and `value_date`. |
+| First causal stream sequence | 1 | One ledger-owned counter orders financial postings and operational decisions independently of booked day and `value_date`. |

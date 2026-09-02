@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 4 — Basic credit/debit ledger postings
+**Completed through:** Phase 5 — Authorization and available-balance handling
 
-**Next phase:** Phase 5 — Authorization and available-balance handling (`not started`)
+**Next phase:** Phase 6 — Settlement validation/lifecycle (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -12,7 +12,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 2 | Establish expected ledger semantics and expected numbers | Complete |
 | 3 | Money/currency representation | Complete |
 | 4 | Basic credit/debit ledger postings | Complete |
-| 5 | Authorization and available-balance handling | Not started |
+| 5 | Authorization and available-balance handling | Complete |
 | 6 | Settlement validation/lifecycle | Not started |
 | 7 | Value-dated entries | Not started |
 | 8 | Overdraft fee assessment | Not started |
@@ -157,6 +157,19 @@ Phase 4 is complete. `src/ledger.ts` provides the minimal append-only ledger fou
 - account and posting currency must match, and posting magnitudes must be positive.
 
 No authorization, hold, available-balance, settlement, fee, reversal, historical balance, interest, allocation, or replay behavior was implemented. Duplicate event IDs are not deduplicated in this phase.
+
+### Phase 5 — Authorization and available-balance handling
+
+Phase 5 is complete. The ledger now records immutable authorization decisions with only `APPROVED` and `DECLINED` states:
+
+- available balance is derived as current ledger balance minus all approved holds for the account;
+- a positive hold is approved when available balance after the hold is zero or positive, otherwise it is declined;
+- approved authorizations remain active holds, while declined decisions remain inspectable but contribute no hold;
+- authorization hold currency must match the account and authorization IDs are unique across the ledger;
+- postings and authorization decisions share one ledger-owned causal sequence counter;
+- later postings change derived balances but never recalculate a recorded authorization decision.
+
+Authorizations create no financial posting and do not change ledger balance. No settlement, hold release, expiry, reversal, fee, historical balance, interest, allocation, or replay behavior was implemented.
 
 ## Assessment tensions
 
