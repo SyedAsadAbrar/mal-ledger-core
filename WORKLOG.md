@@ -67,3 +67,11 @@
 - Added 21 focused tests covering canonical pre-E7 and post-E7 balances, historical knowledge cutoffs, date semantics, validation, and immutability.
 - Documented cutoff zero as opening-balance-only and marked Phase 7 complete with Phase 8 not started.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-02T01:06:49+04:00 — Phase 8 overdraft fee assessment
+
+- Added immutable overdraft fee records linked to normal AED DEBIT postings in the existing global causal sequence.
+- Implemented chronological rolling assessment, account/day uniqueness, append-only fee history, deterministic generated identities, and explicit negative non-AED failure.
+- Added 26 focused tests covering eligibility, metadata, immutability, uniqueness, cascading, canonical E7 fees and balances, historical restatement, currency boundaries, and sequence links.
+- Documented the fee identity/date policy and negative non-AED implementation boundary, and marked Phase 8 complete with Phase 9 not started.
+- Ran TypeScript checking and the complete test suite successfully.

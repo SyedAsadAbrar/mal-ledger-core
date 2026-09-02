@@ -94,3 +94,13 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | --- | --- | --- |
 | Earliest causal knowledge cutoff | 0 | Stored records remain one-based; zero cleanly represents the state before any event and includes only opening balance. |
 | Omitted causal knowledge cutoff | Latest currently known sequence | Historical queries default to everything processed so far while an explicit cutoff preserves an earlier knowledge state. |
+
+## Phase 8 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| Fee uniqueness | One assessment per `(accountId, assessedDay)` | Implements the assessment's once-per-day/per-account rule without generic external event-ID deduplication. |
+| Generated fee identity | `FEE:<accountId>:D<assessedDay>` | Deterministic internal identity remains distinct from E1–E10 source event IDs. |
+| Fee date metadata | Booked day and `valueDate` both equal assessed day | Global sequence separately preserves when the retrospectively assessed fee was appended. |
+| Fee causal records | Assessment record followed by linked debit sequence | Keeps one global ordering and uses the ordinary financial posting history for all balance effects. |
+| Negative non-AED closing | Explicit unsupported-fee-currency error | No FX or BHD-equivalent fee amount is specified. |
