@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 5 — Authorization and available-balance handling
+**Completed through:** Phase 6 — Settlement validation/lifecycle
 
-**Next phase:** Phase 6 — Settlement validation/lifecycle (`not started`)
+**Next phase:** Phase 7 — Value-dated entries (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -13,7 +13,7 @@ This is a living implementation plan. Update statuses as work progresses without
 | 3 | Money/currency representation | Complete |
 | 4 | Basic credit/debit ledger postings | Complete |
 | 5 | Authorization and available-balance handling | Complete |
-| 6 | Settlement validation/lifecycle | Not started |
+| 6 | Settlement validation/lifecycle | Complete |
 | 7 | Value-dated entries | Not started |
 | 8 | Overdraft fee assessment | Not started |
 | 9 | Reversal behavior | Not started |
@@ -170,6 +170,20 @@ Phase 5 is complete. The ledger now records immutable authorization decisions wi
 - later postings change derived balances but never recalculate a recorded authorization decision.
 
 Authorizations create no financial posting and do not change ledger balance. No settlement, hold release, expiry, reversal, fee, historical balance, interest, allocation, or replay behavior was implemented.
+
+### Phase 6 — Settlement validation/lifecycle
+
+Phase 6 is complete. Authorization and settlement lifecycle history is append-only:
+
+- authorization records now preserve source `eventId` separately from `authorizationId`;
+- immutable settlement records retain accepted/rejected result, rejection reason, date metadata, causal sequence, and the linked debit sequence when accepted;
+- current authorization state is derived as `APPROVED`, `DECLINED`, or `SETTLED` without mutating the original decision;
+- settlement is accepted only for an active approved authorization with matching account/currency and a positive amount no greater than the hold;
+- accepted settlement appends one normal DEBIT posting, releases the entire hold through lifecycle projection, and creates no posting for unused hold;
+- unknown, declined, already-settled, over-capture, invalid-amount, currency-mismatch, and account-mismatch attempts remain inspectable rejections with no debit;
+- one source settlement event is represented by adjacent causal records sharing `eventId`, with the settlement explicitly linking to its generated posting sequence.
+
+No historical balance projection, fee, reversal, interest, capitalization, instalment allocation, authorization expiry/cancellation, or full replay behavior was implemented.
 
 ## Assessment tensions
 

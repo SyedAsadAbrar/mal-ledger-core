@@ -23,6 +23,7 @@ function authorizeAed(
   amount: string,
 ) {
   return ledger.authorize({
+    eventId: `${authorizationId}-event`,
     authorizationId,
     accountId: "aed-account",
     holdAmount: Money.parse("AED", amount),
@@ -67,6 +68,7 @@ test("approves an Auth-A-like AED 200 hold against AED 250", () => {
   });
 
   const authorization = ledger.authorize({
+    eventId: "E3",
     authorizationId: "Auth-A",
     accountId: "aed-account",
     holdAmount: Money.parse("AED", "200.00"),
@@ -148,6 +150,7 @@ test("BHD authorization preserves exact three-decimal amounts", () => {
   ]);
 
   const authorization = ledger.authorize({
+    eventId: "bhd-authorization-event",
     authorizationId: "Auth-1",
     accountId: "bhd-account",
     holdAmount: Money.parse("BHD", "3.334"),
@@ -166,6 +169,7 @@ test("rejects a cross-currency authorization hold", () => {
   assert.throws(
     () =>
       ledger.authorize({
+        eventId: "authorization-event",
         authorizationId: "Auth-1",
         accountId: "aed-account",
         holdAmount: Money.parse("BHD", "1.000"),
@@ -200,6 +204,7 @@ test("rejects authorization against an unknown account", () => {
   assert.throws(
     () =>
       ledger.authorize({
+        eventId: "authorization-event",
         authorizationId: "Auth-1",
         accountId: "missing-account",
         holdAmount: Money.parse("AED", "1.00"),
@@ -263,6 +268,7 @@ test("postings and authorizations share one causal sequence", () => {
     valueDate: 1,
   });
   const authorization = ledger.authorize({
+    eventId: "E3",
     authorizationId: "Auth-A",
     accountId: "aed-account",
     holdAmount: Money.parse("AED", "200.00"),

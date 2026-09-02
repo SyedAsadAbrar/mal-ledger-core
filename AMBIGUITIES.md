@@ -167,10 +167,10 @@ Each record will include:
 - **Ambiguity:** Should a later settlement against a known declined authorization post a debit?
 - **Why it matters:** It would define lifecycle behavior beyond E6's unknown reference.
 - **Possible interpretations:** Reject; permit as an independent debit; or accept under a separate offline-settlement model.
-- **Chosen interpretation:** None for Phase 2; this case is deliberately outside the supplied replay.
-- **Reasoning:** Auth-B is declined and never settled, so selecting broader production settlement semantics is unnecessary here.
-- **Replay/test consequences:** Do not add this behavior to the initial canonical replay.
-- **Status:** Outside supplied scenario / intentionally not implemented
+- **Chosen interpretation:** Reject the settlement attempt with no financial posting. The declined authorization remains `DECLINED`.
+- **Reasoning:** Phase 6 accepts settlement only against an active approved authorization. Treating the attempt as an independent debit would discard the explicit authorization relationship.
+- **Replay/test consequences:** Focused lifecycle tests retain an inspectable rejected attempt and verify no debit; E1–E10 remains unaffected because Auth-B is never settled.
+- **Status:** Decided
 
 ## A-17 — Duplicate authorization IDs
 
@@ -180,4 +180,24 @@ Each record will include:
 - **Chosen interpretation:** Authorization IDs are unique across the ledger. Once an ID has produced either an approved or declined decision, any later request using that ID is rejected without appending another authorization record.
 - **Reasoning:** One ledger-wide identity rule is the smallest model that makes future lifecycle references unambiguous. This is distinct from unresolved duplicate external event-ID ingestion in A-09.
 - **Replay/test consequences:** Focused tests reject reuse after a recorded decision. No generic event-ID deduplication is added.
+- **Status:** Decided
+
+## A-18 — Settlement greater than the approved hold
+
+- **Ambiguity:** May a settlement exceed the amount of its active approved hold?
+- **Why it matters:** Accepting over-capture would debit more than the amount reserved and requires policy not present in the assessment.
+- **Possible interpretations:** Reject any amount above the hold; allow over-capture if ledger funds exist; or allow it under a separate tolerance policy.
+- **Chosen interpretation:** Reject a settlement greater than the original approved hold, append no debit, and leave the full hold active.
+- **Reasoning:** The assessment requires only E5's below-hold terminal settlement and provides no over-capture or tolerance rule.
+- **Replay/test consequences:** Equal or lower positive amounts may settle; an over-capture attempt remains inspectable with no balance or hold change.
+- **Status:** Decided
+
+## A-19 — Repeated settlement of one authorization
+
+- **Ambiguity:** Can an authorization produce more than one accepted settlement?
+- **Why it matters:** A second accepted debit would duplicate capture after the terminal lifecycle event and after the hold has been released.
+- **Possible interpretations:** Reject later attempts; accept multiple captures up to the hold; or treat an exact retry as idempotent.
+- **Chosen interpretation:** An authorization settles at most once. Every later settlement attempt is rejected and retained for inspection without another debit.
+- **Reasoning:** Phase 2 defines E5 as terminal rather than partial, and generic event-idempotency semantics remain unresolved in A-09.
+- **Replay/test consequences:** The first valid attempt derives `SETTLED`; later attempts leave that state and the financial history unchanged.
 - **Status:** Decided

@@ -22,8 +22,10 @@ export interface LedgerEntry extends PostingInput {
 }
 
 export type AuthorizationStatus = "APPROVED" | "DECLINED";
+export type AuthorizationCurrentState = AuthorizationStatus | "SETTLED";
 
 export interface AuthorizationInput {
+  readonly eventId: string;
   readonly authorizationId: string;
   readonly accountId: string;
   readonly holdAmount: Money;
@@ -34,6 +36,33 @@ export interface AuthorizationInput {
 export interface AuthorizationRecord extends AuthorizationInput {
   readonly status: AuthorizationStatus;
   readonly sequence: number;
+}
+
+export type SettlementResult = "ACCEPTED" | "REJECTED";
+
+export type SettlementRejectionReason =
+  | "UNKNOWN_AUTHORIZATION"
+  | "AUTHORIZATION_DECLINED"
+  | "ALREADY_SETTLED"
+  | "ACCOUNT_MISMATCH"
+  | "CURRENCY_MISMATCH"
+  | "INVALID_AMOUNT"
+  | "AMOUNT_EXCEEDS_HOLD";
+
+export interface SettlementInput {
+  readonly eventId: string;
+  readonly authorizationId: string;
+  readonly accountId: string;
+  readonly amount: Money;
+  readonly bookedDay: number;
+  readonly valueDate: number;
+}
+
+export interface SettlementRecord extends SettlementInput {
+  readonly result: SettlementResult;
+  readonly rejectionReason: SettlementRejectionReason | null;
+  readonly sequence: number;
+  readonly ledgerEntrySequence: number | null;
 }
 
 function immutableMoney(money: Money): Money {
@@ -58,7 +87,8 @@ export class Ledger {
   private readonly accounts = new Map<string, AccountDefinition>();
   private readonly postingHistory: LedgerEntry[] = [];
   private readonly authorizationHistory: AuthorizationRecord[] = [];
-  private readonly authorizationIds = new Set<string>();
+  private readonly authorizationById = new Map<string, AuthorizationRecord>();
+  private readonly settlementHistory: SettlementRecord[] = [];
   private nextSequence = 1;
 
   constructor(accounts: readonly AccountDefinition[] = []) {
@@ -98,13 +128,14 @@ export class Ledger {
   }
 
   authorize(input: AuthorizationInput): AuthorizationRecord {
+    requireNonEmpty(input.eventId, "event id");
     requireNonEmpty(input.authorizationId, "authorization id");
     requireDay(input.bookedDay, "bookedDay");
     requireDay(input.valueDate, "valueDate");
 
     const account = this.requireAccount(input.accountId);
 
-    if (this.authorizationIds.has(input.authorizationId)) {
+    if (this.authorizationById.has(input.authorizationId)) {
       throw new Error(
         `Authorization already exists: ${input.authorizationId}`,
       );
@@ -126,6 +157,7 @@ export class Ledger {
     const status: AuthorizationStatus =
       availableAfterHold.minorUnits >= 0 ? "APPROVED" : "DECLINED";
     const authorization: AuthorizationRecord = Object.freeze({
+      eventId: input.eventId,
       authorizationId: input.authorizationId,
       accountId: input.accountId,
       holdAmount: immutableMoney(input.holdAmount),
@@ -136,9 +168,104 @@ export class Ledger {
     });
 
     this.authorizationHistory.push(authorization);
-    this.authorizationIds.add(authorization.authorizationId);
+    this.authorizationById.set(
+      authorization.authorizationId,
+      authorization,
+    );
     this.nextSequence += 1;
     return authorization;
+  }
+
+  settle(input: SettlementInput): SettlementRecord {
+    requireNonEmpty(input.eventId, "event id");
+    requireNonEmpty(input.authorizationId, "authorization id");
+    requireDay(input.bookedDay, "bookedDay");
+    requireDay(input.valueDate, "valueDate");
+
+    const authorization = this.authorizationById.get(input.authorizationId);
+
+    if (authorization === undefined) {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "UNKNOWN_AUTHORIZATION",
+        null,
+      );
+    }
+
+    if (authorization.accountId !== input.accountId) {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "ACCOUNT_MISMATCH",
+        null,
+      );
+    }
+
+    if (authorization.holdAmount.currency !== input.amount.currency) {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "CURRENCY_MISMATCH",
+        null,
+      );
+    }
+
+    if (input.amount.minorUnits <= 0) {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "INVALID_AMOUNT",
+        null,
+      );
+    }
+
+    if (authorization.status === "DECLINED") {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "AUTHORIZATION_DECLINED",
+        null,
+      );
+    }
+
+    if (this.authorizationState(input.authorizationId) === "SETTLED") {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "ALREADY_SETTLED",
+        null,
+      );
+    }
+
+    if (input.amount.compare(authorization.holdAmount) === 1) {
+      return this.appendSettlement(
+        input,
+        "REJECTED",
+        "AMOUNT_EXCEEDS_HOLD",
+        null,
+      );
+    }
+
+    const settlement = this.appendSettlement(
+      input,
+      "ACCEPTED",
+      null,
+      this.nextSequence + 1,
+    );
+    const entry = this.append("DEBIT", {
+      eventId: input.eventId,
+      accountId: input.accountId,
+      amount: input.amount,
+      bookedDay: input.bookedDay,
+      valueDate: input.valueDate,
+    });
+
+    if (entry.sequence !== settlement.ledgerEntrySequence) {
+      throw new Error("Settlement posting sequence invariant failed");
+    }
+
+    return settlement;
   }
 
   get entries(): readonly LedgerEntry[] {
@@ -149,12 +276,39 @@ export class Ledger {
     return this.authorizationHistory.slice();
   }
 
+  get settlements(): readonly SettlementRecord[] {
+    return this.settlementHistory.slice();
+  }
+
+  authorizationState(
+    authorizationId: string,
+  ): AuthorizationCurrentState | undefined {
+    const authorization = this.authorizationById.get(authorizationId);
+
+    if (authorization === undefined) {
+      return undefined;
+    }
+
+    if (authorization.status === "DECLINED") {
+      return "DECLINED";
+    }
+
+    const hasAcceptedSettlement = this.settlementHistory.some(
+      (settlement) =>
+        settlement.authorizationId === authorizationId &&
+        settlement.result === "ACCEPTED",
+    );
+
+    return hasAcceptedSettlement ? "SETTLED" : "APPROVED";
+  }
+
   activeHolds(accountId: string): readonly AuthorizationRecord[] {
     this.requireAccount(accountId);
     return this.authorizationHistory.filter(
       (authorization) =>
         authorization.accountId === accountId &&
-        authorization.status === "APPROVED",
+        this.authorizationState(authorization.authorizationId) ===
+          "APPROVED",
     );
   }
 
@@ -216,6 +370,30 @@ export class Ledger {
     this.postingHistory.push(entry);
     this.nextSequence += 1;
     return entry;
+  }
+
+  private appendSettlement(
+    input: SettlementInput,
+    result: SettlementResult,
+    rejectionReason: SettlementRejectionReason | null,
+    ledgerEntrySequence: number | null,
+  ): SettlementRecord {
+    const settlement: SettlementRecord = Object.freeze({
+      eventId: input.eventId,
+      authorizationId: input.authorizationId,
+      accountId: input.accountId,
+      amount: immutableMoney(input.amount),
+      bookedDay: input.bookedDay,
+      valueDate: input.valueDate,
+      result,
+      rejectionReason,
+      sequence: this.nextSequence,
+      ledgerEntrySequence,
+    });
+
+    this.settlementHistory.push(settlement);
+    this.nextSequence += 1;
+    return settlement;
   }
 
   private requireAccount(accountId: string): AccountDefinition {
