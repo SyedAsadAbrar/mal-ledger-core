@@ -91,3 +91,11 @@
 - Enforced exact summation of individually rounded accruals, per-account/window uniqueness, and explicit zero-total rejection.
 - Added 16 focused tests covering AED and BHD accruals, canonical values, holds, snapshot timing, posting identity, duplicates, and nested immutability.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-02T01:42:05+04:00 — Phase 11 exact BHD instalments
+
+- Added exact positive-money instalment allocation using integer quotient/remainder arithmetic with the residual assigned to the final instalment.
+- Added a minimal ledger API that maps one source credit to deterministic child CREDIT postings using ordinary ledger history.
+- Added 10 focused tests for canonical BHD values, exact reconciliation, residual placement, dates, causal order, historical balances, child identities, and invalid input.
+- Documented the concrete E10 minor-unit arithmetic and source/child identity strategy, and marked Phase 11 complete with Phase 12 not started.
+- Ran TypeScript checking and the complete test suite successfully.
