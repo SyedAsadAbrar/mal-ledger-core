@@ -5,10 +5,12 @@ Ledger and accounting ambiguities must be documented here before a behavior is i
 Each record will include:
 
 - ambiguity
+- why it matters
 - possible interpretations
 - chosen interpretation
 - reasoning
-- implications
+- consequences
+- status
 
 ## Records
 

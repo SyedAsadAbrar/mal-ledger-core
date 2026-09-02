@@ -3,18 +3,20 @@
 These instructions apply to all future work in this repository.
 
 1. Read `PROJECT_PLAN.md`, `AMBIGUITIES.md`, `REJECTED.md`, and `NUMBERS.md` before changing business logic.
-2. Treat the assessment specification and explicitly documented decisions as authoritative.
+2. Treat the assessment specification and documented human decisions as authoritative.
 3. Never silently resolve a ledger or accounting ambiguity in code.
-4. If behavior is ambiguous and not yet documented, record it in `AMBIGUITIES.md` before implementing the chosen behavior.
-5. Keep all financial events append-only. Never mutate or delete an existing financial event.
-6. Keep processing/booking day separate from `value_date`.
-7. Represent currency amounts using integer minor units rather than JavaScript floating-point arithmetic when financial logic is added.
-8. Prefer the smallest implementation that satisfies the assessment.
-9. Do not introduce APIs, databases, persistence, UI, Docker, queues, or distributed-system infrastructure.
-10. Add focused tests for every business rule when that rule is implemented.
-11. Run the relevant tests after every implementation change.
-12. Do not change previously documented business decisions without explicitly updating the relevant decision documentation.
-13. Maintain `PROJECT_PLAN.md` as implementation progresses.
-14. Do not fabricate `WORKLOG.md` history. Only append entries that correspond to work actually performed.
-15. Do not squash or rewrite existing Git history.
-16. Do not commit unless explicitly asked to commit.
+4. If behavior is genuinely ambiguous, document it in `AMBIGUITIES.md` before implementing it.
+5. Keep financial ledger and event history append-only.
+6. Never mutate or delete an existing financial event.
+7. Keep processing/booking day separate from `value_date`.
+8. Use integer minor units for financial amounts when money logic is implemented; do not use JavaScript floating-point arithmetic for ledger money.
+9. Prefer the smallest understandable implementation that satisfies the assessment and is easy to defend.
+10. Do not introduce a web layer, API, UI, database, persistence, Docker, queues, or distributed infrastructure unless the project scope explicitly changes.
+11. Add focused tests alongside implemented business rules.
+12. Run relevant tests and typechecking after implementation changes.
+13. Maintain `PROJECT_PLAN.md` as work progresses.
+14. Never fabricate `WORKLOG.md`; record only work actually performed.
+15. Preserve Git history; never squash or rewrite previous commits.
+16. Do not commit unless the current task explicitly requests a commit.
+17. Do not begin a later phase while the current phase is incomplete.
+18. Do not change an already documented business decision silently.
