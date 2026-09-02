@@ -131,3 +131,10 @@
 - Audited tracked files, `.gitignore`, local paths, secret-like patterns, stale text, repository scope, rejection classifications, README commands, and the intact commit history.
 - Queried GitHub read-only and confirmed the repository remains private with `chore/project-scaffold` as the default branch; no GitHub settings were changed.
 - Marked Phase 16 complete with no next implementation phase and made no domain or canonical behavior changes.
+
+## 2026-09-02T14:34:14+04:00 — Minimal GitHub Actions verification
+
+- Added a minimal Node.js 22 GitHub Actions workflow for pushes and pull requests to `master`.
+- Configured CI to run a clean install, typecheck, the green test suite, and the assessment replay.
+- Kept the intentional duplicate-event expected-failure test separate from the green CI path.
+- Repeated the clean local verification successfully and made no domain or canonical behavior changes.
