@@ -81,3 +81,9 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | Formatting | Sign plus integer quotient and zero-padded minor-unit remainder | Always emits exactly two AED or three BHD decimal places. |
 | Rational rounding | Exact `bigint` product/division/remainder, then round half up | Result is converted back only after confirming it is a safe integer minor-unit amount. |
 | Half-up negative tie | Away from zero | `-0.5` minor unit rounds to `-1`, mirroring positive half-up magnitude rounding. |
+
+## Phase 4 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| First ledger-entry sequence | 1 | Sequence is a human-readable, monotonically increasing append position and is independent of booked day and `value_date`. |

@@ -2,16 +2,16 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 3 — Money/currency representation
+**Completed through:** Phase 4 — Basic credit/debit ledger postings
 
-**Next phase:** Phase 4 — Basic credit/debit ledger postings (`not started`)
+**Next phase:** Phase 5 — Authorization and available-balance handling (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
 | 1 | Project scaffold | Complete |
 | 2 | Establish expected ledger semantics and expected numbers | Complete |
 | 3 | Money/currency representation | Complete |
-| 4 | Basic credit/debit ledger postings | Not started |
+| 4 | Basic credit/debit ledger postings | Complete |
 | 5 | Authorization and available-balance handling | Not started |
 | 6 | Settlement validation/lifecycle | Not started |
 | 7 | Value-dated entries | Not started |
@@ -144,6 +144,19 @@ Phase 3 is complete. `src/money.ts` provides the bounded assessment money model:
 - `roundFraction` uses exact integer arithmetic and round-half-up for later rational-rate calculations.
 
 No account, ledger, event, fee, authorization, settlement, reversal, interest lifecycle, or replay behavior was implemented.
+
+### Phase 4 — Basic credit/debit ledger postings
+
+Phase 4 is complete. `src/ledger.ts` provides the minimal append-only ledger foundation:
+
+- accounts have only an ID, currency, and opening balance;
+- CREDIT and DEBIT entries store positive `Money` magnitudes, with posting type determining direction;
+- each frozen entry preserves event ID, account ID, booked day, value date, and a one-based append sequence;
+- entries remain in causal insertion order and exposed history is a copy, with no update or delete path;
+- current ledger balance is derived from opening balance plus all appended postings for that account;
+- account and posting currency must match, and posting magnitudes must be positive.
+
+No authorization, hold, available-balance, settlement, fee, reversal, historical balance, interest, allocation, or replay behavior was implemented. Duplicate event IDs are not deduplicated in this phase.
 
 ## Assessment tensions
 

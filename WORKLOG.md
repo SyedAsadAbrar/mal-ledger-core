@@ -34,3 +34,11 @@
 - Added focused tests for precision, scales, parsing, normalization, formatting, operations, currency mismatch, interest primitives, half ties, and invalid inputs.
 - Documented the concrete representation choices and marked Phase 3 complete with Phase 4 not started.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-01T23:27:14+04:00 — Phase 4 basic ledger postings
+
+- Added minimal account registration and append-only CREDIT/DEBIT postings using positive exact-money magnitudes.
+- Preserved booked day, value date, event identity, and one-based stream append sequence on frozen ledger entries.
+- Derived current per-account balances from opening balances and immutable posting history.
+- Added focused account, posting, balance, currency, ordering, immutability, magnitude, and account-isolation tests.
+- Ran TypeScript checking and the complete test suite successfully.
