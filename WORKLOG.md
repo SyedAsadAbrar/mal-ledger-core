@@ -99,3 +99,11 @@
 - Added 10 focused tests for canonical BHD values, exact reconciliation, residual placement, dates, causal order, historical balances, child identities, and invalid input.
 - Documented the concrete E10 minor-unit arithmetic and source/child identity strategy, and marked Phase 11 complete with Phase 12 not started.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-02T01:50:56+04:00 — Phases 12 and 13 complete replay and output
+
+- Added the fixed E1–E10 scenario runner using the existing ledger APIs in authoritative source order.
+- Assessed the three fees immediately after E7, retained E7's pre-fee Day 2 diagnostic, and capitalized both accounts only after E10.
+- Replaced the replay placeholder with deterministic Day 1–Day 6 output for balances, fees, authorization states, and errors plus an interest summary.
+- Added 10 end-to-end tests covering source order, E6, fee retention, authorization history, E7/E9 states, E10, interest, final balances, generated postings, and formatting.
+- Marked Phases 12 and 13 complete with Phase 14 not started, and ran typechecking, the complete test suite, and the executable replay successfully.

@@ -2,9 +2,9 @@
 
 This is a living implementation plan. Update statuses as work progresses without deciding later-phase semantics prematurely.
 
-**Completed through:** Phase 11 — BHD instalment allocation
+**Completed through:** Phase 13 — Required daily output
 
-**Next phase:** Phase 12 — Full E1–E10 replay (`not started`)
+**Next phase:** Phase 14 — Complete test suite and intentional failing test (`not started`)
 
 | Phase | Work | Status |
 | ---: | --- | --- |
@@ -19,8 +19,8 @@ This is a living implementation plan. Update statuses as work progresses without
 | 9 | Reversal behavior | Complete |
 | 10 | Interest accrual and capitalization | Complete |
 | 11 | BHD instalment allocation | Complete |
-| 12 | Full E1–E10 replay | Not started |
-| 13 | Required daily output | Not started |
+| 12 | Full E1–E10 replay | Complete |
+| 13 | Required daily output | Complete |
 | 14 | Complete test suite and intentional failing test | Not started |
 | 15 | Documentation review | Not started |
 | 16 | Final clean-run verification | Not started |
@@ -254,6 +254,21 @@ Phase 11 is complete. `allocateInstallments(total, count)` and `Ledger.postCredi
 - current balance and the existing value-date projection derive the result without a special balance path.
 
 The focused E10-like test setup ends at BHD 10.000 and does not execute interest capitalization. No full replay, daily output, intentional known-failure test, final README, or architecture document was implemented.
+
+### Phases 12 and 13 — Complete replay and required output
+
+Phases 12 and 13 are complete. `runAssessmentScenario()` and `formatReplayReport()` keep fixed assessment orchestration separate from the ledger domain engine:
+
+- source events are processed exactly as E1 → E2 → E3 → E4 → E5 → E6 → E7 → E8 → E9 → E10, without sorting by booked day or `valueDate`;
+- E7 is appended first, its Day 2 pre-fee AED -370.00 diagnostic is retained, and fee assessment runs immediately afterward through Day 5;
+- E9 reverses E7 principal only and does not trigger fee reassessment or refunds;
+- E10 follows E9 in source order and creates the three ordinary BHD child credits;
+- AED and BHD interest are capitalized only after the complete source stream;
+- the structured report contains final Day 1–Day 6 ledger balances, retained fees, fixed-window end-of-day authorization states, the E6 error, interest records, and a compact audit summary;
+- the pure formatter emits deterministic daily blocks with visibly separate Balances, Fees, Authorizations, and Errors sections, followed by a short interest summary;
+- `npm run replay` now builds and executes the real scenario through a thin `src/replay.ts` wrapper.
+
+The final output closes Day 6 at AED 390.93 and BHD 10.008. No intentional failing test, final documentation cleanup, README rewrite, or architecture document was implemented.
 
 ## Assessment tensions
 
