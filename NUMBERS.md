@@ -104,3 +104,14 @@ These values form the canonical Phase 2 numerical oracle. Assessment facts, math
 | Fee date metadata | Booked day and `valueDate` both equal assessed day | Global sequence separately preserves when the retrospectively assessed fee was appended. |
 | Fee causal records | Assessment record followed by linked debit sequence | Keeps one global ordering and uses the ordinary financial posting history for all balance effects. |
 | Negative non-AED closing | Explicit unsupported-fee-currency error | No FX or BHD-equivalent fee amount is specified. |
+
+## Phase 9 representation details
+
+| Detail | Implementation | Reasoning |
+| --- | --- | --- |
+| Reversal amount | Exact target posting amount | Full reversal is derived; callers cannot supply an arbitrary amount. |
+| Reversal direction | Opposite target posting type | DEBIT becomes CREDIT and CREDIT becomes DEBIT through a normal financial posting. |
+| Target identity resolution | Exactly one financial posting matching `targetEventId` | Zero or multiple matches fail without guessing or changing generic event-ID policy. |
+| Reversal uniqueness | One successful reversal per target posting sequence | Prevents duplicate compensation while keeping source event-ID deduplication out of scope. |
+| Reversal causal records | Audit record followed by linked compensating posting | Preserves append-only global order and allows causal-cutoff reconstruction. |
+| Canonical E9 compensation | AED +620.00, booked Day 6, value Day 2 | Exactly offsets E7 principal while retained fees preserve their AED -75.00 effect. |

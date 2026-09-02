@@ -75,3 +75,11 @@
 - Added 26 focused tests covering eligibility, metadata, immutability, uniqueness, cascading, canonical E7 fees and balances, historical restatement, currency boundaries, and sequence links.
 - Documented the fee identity/date policy and negative non-AED implementation boundary, and marked Phase 8 complete with Phase 9 not started.
 - Ran TypeScript checking and the complete test suite successfully.
+
+## 2026-09-02T01:24:12+04:00 — Phase 9 append-only reversal
+
+- Added immutable reversal records linked to derived opposite financial postings in the existing global causal sequence.
+- Implemented unique target lookup, ambiguous/unknown target rejection, account validation, and one successful reversal per target posting sequence.
+- Added 14 focused tests covering opposite posting derivation, E7 immutability, E9 links and balances, fee retention, authorization history, causal cutoffs, and invalid targets.
+- Resolved the unknown, ambiguous, and repeated reversal-target decisions and marked Phase 9 complete with Phase 10 not started.
+- Ran TypeScript checking and the complete test suite successfully.

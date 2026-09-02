@@ -102,25 +102,25 @@ Each record will include:
 - **Replay/test consequences:** Do not add duplicate behavior or tests in the initial replay implementation.
 - **Status:** Outside supplied scenario / intentionally not implemented
 
-## A-10 — Unknown reversal target
+## A-10 — Unknown or ambiguous reversal target
 
-- **Ambiguity:** What happens when a reversal references no known reversible posting?
-- **Why it matters:** Creating a credit without an original would corrupt the ledger.
-- **Possible interpretations:** Reject; append a zero-effect rejected event; or treat it as an independent adjustment.
-- **Chosen interpretation:** None for Phase 2; unknown-target handling is deliberately outside the supplied replay.
-- **Reasoning:** E9 references known E7, so the canonical implementation need not invent a broader reversal validation contract yet.
-- **Replay/test consequences:** Do not add this negative case to the initial replay implementation.
-- **Status:** Outside supplied scenario / intentionally not implemented
+- **Ambiguity:** What happens when a reversal target event ID matches no financial posting or matches more than one because generic event-ID deduplication is not implemented?
+- **Why it matters:** Creating compensation without an original, or guessing among duplicate matches, would corrupt the ledger.
+- **Possible interpretations:** Reject; append a zero-effect rejected event; treat an unknown target as an independent adjustment; or choose one duplicate by account/sequence.
+- **Chosen interpretation:** Reject before appending any reversal record or financial posting when there are zero or multiple target-event-ID matches. Do not guess among duplicates.
+- **Reasoning:** A reversal amount and direction must come from exactly one immutable financial posting. This safeguard leaves generic ingestion deduplication in A-09 unresolved.
+- **Replay/test consequences:** Canonical E9 resolves uniquely to E7. Focused tests prove unknown and ambiguous targets have no financial effect.
+- **Status:** Decided
 
 ## A-11 — Reversal of an already-reversed event
 
 - **Ambiguity:** May a second reversal target E7 after it has already been fully reversed?
 - **Why it matters:** A second compensating credit would overstate the account.
 - **Possible interpretations:** Reject; idempotent no-op; or permit only explicitly supported partial reversals.
-- **Chosen interpretation:** None for Phase 2; repeated-target handling is deliberately outside the supplied replay.
-- **Reasoning:** E7 is reversed exactly once by E9, and partial/repeated reversal semantics are production scope beyond this scenario.
-- **Replay/test consequences:** The initial implementation only needs the known, once-reversed E7 path.
-- **Status:** Outside supplied scenario / intentionally not implemented
+- **Chosen interpretation:** Each financial posting sequence may be reversed at most once. Reject later attempts before appending another reversal record or compensating posting.
+- **Reasoning:** Phase 9 supports full reversal only. A second equal compensation would overstate the account, while retry idempotency remains part of unresolved generic event-ID policy rather than reversal semantics.
+- **Replay/test consequences:** E9 reverses E7 exactly once; a second target attempt leaves reversal and financial histories unchanged.
+- **Status:** Decided
 
 ## A-12 — AED fee rule and BHD accounts
 
